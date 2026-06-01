@@ -1,266 +1,208 @@
-.prediction {
-  margin-top: 8px;
+/* AI買い目 — ダークUI（アプリ本体と統一） */
+
+.prediction--dark {
+  color: #fff;
 }
 
 .prediction-title {
-  margin: 0 0 12px;
-  font-size: 1rem;
+  margin: 0 0 8px;
+  font-size: 0.9rem;
   font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  text-transform: uppercase;
 }
 
 .prediction-muted,
 .prediction-empty,
 .prediction-hint {
   margin: 0;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  line-height: 1.45;
-}
-
-.prediction-hint {
-  margin-top: 12px;
-  font-size: 0.72rem;
-}
-
-.prediction-error-main {
-  color: #b91c1c;
-  font-weight: 600;
-}
-
-.prediction-error-detail {
-  margin: 8px 0 0;
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: #fef2f2;
-  font-size: 0.72rem;
-}
-
-.prediction-error-detail div {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.prediction-error-detail dt {
-  font-weight: 600;
-  color: var(--text-muted);
-  min-width: 3.5rem;
-}
-
-.prediction-error-detail dd {
-  margin: 0;
-  word-break: break-all;
-}
-
-.prediction-h3 {
-  margin: 16px 0 8px;
-  font-size: 0.88rem;
-  font-weight: 700;
-}
-
-/* --- 本命カード --- */
-
-.pred-honmei-card {
-  margin-bottom: 12px;
-  padding: 14px;
-  border-radius: 12px;
-  background: linear-gradient(160deg, #fff8e1 0%, #ffe0b2 100%);
-  border: 1px solid #ffb74d;
-  text-align: center;
-}
-
-.pred-honmei-label {
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: #e65100;
-  margin-bottom: 6px;
-}
-
-.pred-honmei-combo {
-  font-size: 2rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  font-variant-numeric: tabular-nums;
-  color: #1a1a1a;
-  line-height: 1.1;
-}
-
-.pred-honmei-meta {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 12px;
-}
-
-.pred-honmei-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.pred-honmei-stat-label {
-  font-size: 0.68rem;
-  color: #5d4037;
-}
-
-.pred-honmei-stat-value {
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #bf360c;
-}
-
-.pred-honmei-odds {
-  color: #1565c0;
-}
-
-.pred-honmei-alt {
-  margin: 10px 0 0;
-  font-size: 0.72rem;
-  color: #6d4c41;
-}
-
-/* --- 買い方ガイド --- */
-
-.pred-guide-card {
-  margin-bottom: 12px;
-  padding: 12px;
-  border-radius: 12px;
-  background: #f0f7ff;
-  border: 1px solid #90caf9;
-}
-
-.pred-guide-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(25, 118, 210, 0.2);
-}
-
-.pred-guide-head-label {
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.pred-guide-head-pct {
-  font-size: 1.6rem;
-  font-weight: 900;
-  color: #1565c0;
-}
-
-.pred-ai-comment {
-  margin-bottom: 12px;
-  padding: 10px;
-  border-radius: 8px;
-  background: #fff;
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.pred-ai-comment-headline {
-  margin: 0 0 6px;
-  font-size: 0.88rem;
-  font-weight: 800;
-  color: #0d47a1;
-}
-
-.pred-ai-comment-summary,
-.pred-ai-comment-action {
-  margin: 0 0 6px;
-  color: var(--text-muted);
-}
-
-.pred-ai-comment-recs {
-  margin: 0;
-  padding-left: 1.1rem;
-}
-
-.pred-ai-comment-recs li {
-  margin-bottom: 4px;
-}
-
-.pred-guide-title {
-  margin: 0 0 10px;
-  font-size: 0.88rem;
-  font-weight: 800;
-}
-
-.pred-bet-row {
-  display: grid;
-  grid-template-columns: 5.5rem 1fr;
-  gap: 8px;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.pred-bet-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.pred-bet-type {
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: #37474f;
-  padding-top: 2px;
-}
-
-.pred-bet-combos {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.03em;
-}
-
-.pred-bet-points {
-  margin: 2px 0 0;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #1565c0;
-}
-
-.pred-bet-reason {
-  margin: 4px 0 0;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   line-height: 1.4;
 }
 
-/* --- サブ提案 --- */
+.prediction-hint {
+  margin-top: 8px;
+  font-size: 0.65rem;
+  opacity: 0.75;
+}
 
-.pred-sub-recs {
+.prediction-error-main {
+  color: #f87171;
+  font-weight: 600;
+}
+
+.prediction-error-url {
+  font-family: ui-monospace, monospace;
+  font-size: 0.65rem;
+  word-break: break-all;
+}
+
+.prediction-h3 {
+  margin: 10px 0 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* --- ダークカード共通 --- */
+
+.pred-dark-card {
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #fff;
+}
+
+.pred-pick-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.pred-sub-rec {
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: #f8f9fb;
-  border: 1px solid var(--border, #e4e8ec);
-}
-
-.pred-sub-rec-head {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.78rem;
-  font-weight: 700;
+  gap: 6px;
   margin-bottom: 6px;
 }
 
-.pred-sub-rec-pct {
-  color: var(--text-muted);
+.pred-pick-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
-.pred-sub-rec-line {
-  margin: 0;
-  font-size: 0.88rem;
+.pred-pick-type {
+  font-size: 0.7rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.pred-pick-type--honmei {
+  color: #fbbf24;
+}
+
+/* 買い目（主役） */
+
+.pred-pick-combo {
+  margin: 0;
+  font-size: 1.28rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.05em;
   font-variant-numeric: tabular-nums;
+  color: #fff;
+  word-break: break-all;
+}
+
+.pred-pick-combo--hero {
+  font-size: 1.55rem;
+  letter-spacing: 0.06em;
+}
+
+.pred-pick-points {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #93c5fd;
+}
+
+.pred-pick-reason {
+  margin: 4px 0 0;
+  font-size: 0.62rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+/* 本命カード */
+
+.pred-honmei-card {
+  margin-bottom: 6px;
+  border-color: rgba(251, 191, 36, 0.35);
+  background: linear-gradient(165deg, #1a1f2e 0%, #111827 100%);
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.12);
+}
+
+/* 自信度バッジ（右上・小） */
+
+.pred-conf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pred-conf-dot {
+  font-size: 0.55rem;
+}
+
+.pred-conf-pct {
+  font-variant-numeric: tabular-nums;
+}
+
+.pred-conf-lv {
+  font-size: 0.55rem;
+  opacity: 0.7;
+  letter-spacing: 0.04em;
+}
+
+.pred-conf-badge--high {
+  border-color: rgba(74, 222, 128, 0.35);
+  color: #86efac;
+}
+
+.pred-conf-badge--medium {
+  border-color: rgba(250, 204, 21, 0.35);
+  color: #fde047;
+}
+
+.pred-conf-badge--low {
+  border-color: rgba(251, 146, 60, 0.35);
+  color: #fdba74;
+}
+
+/* BOX / フォーメーション */
+
+.pred-pick-card:nth-child(2) .pred-pick-combo {
+  color: #e2e8f0;
+}
+
+/* AIコメント（折りたたみ・補助） */
+
+.pred-ai-brief {
+  margin: 6px 0 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.pred-ai-brief summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.65);
+  list-style: none;
+}
+
+.pred-ai-brief summary::-webkit-details-marker {
+  display: none;
+}
+
+.pred-ai-brief-text {
+  margin: 6px 0 0;
+  line-height: 1.4;
 }
 
 /* --- 印 --- */
@@ -268,44 +210,48 @@
 .prediction-marks {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .prediction-mark-chip {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  background: #fff;
-  border: 1px solid var(--border, #e0e0e0);
-  font-size: 0.78rem;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
+  color: #fff;
 }
 
 .mark-symbol {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 800;
-  min-width: 1.2em;
-  text-align: center;
 }
 
 .mark-symbol.mark-◎ {
-  color: #c62828;
+  color: #f87171;
 }
 
 .mark-symbol.mark-○ {
-  color: #1565c0;
+  color: #60a5fa;
 }
 
 .mark-symbol.mark-▲ {
-  color: #2e7d32;
+  color: #4ade80;
 }
 
 .mark-name {
   font-weight: 600;
+  max-width: 4.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mark-ai {
-  color: var(--text-muted);
-  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.65rem;
+  font-variant-numeric: tabular-nums;
 }
