@@ -136,7 +136,9 @@ export default function RaceResultSection({ raceId, refreshKey = null }) {
                 {aiVerification.comparisons.map((row) => (
                   <tr
                     key={row.lane}
-                    className={row.hitWin ? 'race-result-row--win' : undefined}
+                    className={
+                      row.hitWin ? 'race-result-row--hit hit-row' : undefined
+                    }
                   >
                     <td>{row.aiRank}</td>
                     <td>{row.lane}号艇</td>
