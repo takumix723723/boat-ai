@@ -3,13 +3,13 @@
 }
 
 .prediction-title {
-  margin: 0 0 4px;
+  margin: 0 0 10px;
   font-size: 1rem;
   font-weight: 700;
 }
 
 .prediction-summary {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   padding: 10px 12px;
   border-radius: 8px;
   background: #e8f4fd;
@@ -28,48 +28,151 @@
 }
 
 .prediction-hint {
-  margin-top: 10px;
+  margin-top: 12px;
   font-size: 0.72rem;
-}
-
-.prediction-confidence {
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: #f4f6f8;
-}
-
-.prediction-confidence.conf-high {
-  background: #e8f5e9;
-}
-
-.prediction-confidence.conf-low {
-  background: #fff8e1;
-}
-
-.prediction-conf-label {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-right: 6px;
-}
-
-.prediction-conf-value {
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.prediction-conf-msg {
-  margin: 6px 0 0;
-  font-size: 0.78rem;
-  line-height: 1.4;
-  color: var(--text-muted);
 }
 
 .prediction-h3 {
-  margin: 12px 0 8px;
+  margin: 16px 0 8px;
   font-size: 0.88rem;
   font-weight: 700;
 }
+
+/* --- 買い目提案カード --- */
+
+.pred-rec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pred-rec {
+  padding: 12px;
+  border-radius: 10px;
+  background: #f8f9fb;
+  border: 1px solid var(--border, #e4e8ec);
+}
+
+.pred-rec-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.pred-rec-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pred-rec-emoji {
+  font-size: 1.05rem;
+}
+
+.pred-rec-conf-caption {
+  margin: 0 0 8px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.pred-rec-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pred-rec-line {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
+.pred-rec-note {
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* --- 自信度メーター --- */
+
+.pred-conf-meter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  min-width: 5.5rem;
+}
+
+.pred-conf-pct {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.pred-conf-tag {
+  margin-top: 2px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: right;
+  line-height: 1.2;
+  max-width: 6.5rem;
+}
+
+.pred-conf-meter--high .pred-conf-pct {
+  color: #15803d;
+}
+
+.pred-conf-meter--high .pred-conf-tag {
+  color: #166534;
+}
+
+.pred-conf-meter--medium .pred-conf-pct {
+  color: #a16207;
+}
+
+.pred-conf-meter--medium .pred-conf-tag {
+  color: #854d0e;
+}
+
+.pred-conf-meter--low .pred-conf-pct {
+  color: #b91c1c;
+}
+
+.pred-conf-meter--low .pred-conf-tag {
+  color: #991b1b;
+}
+
+.pred-rec--honmei {
+  border-color: #ffcc80;
+  background: linear-gradient(135deg, #fffaf3 0%, #fff3e0 100%);
+}
+
+.pred-rec--box {
+  border-color: #c5cae9;
+  background: #f5f7fc;
+}
+
+.pred-rec--ana {
+  border-color: #ffcdd2;
+  background: #fff5f5;
+}
+
+/* --- 印 --- */
 
 .prediction-marks {
   display: flex;
@@ -114,66 +217,4 @@
 .mark-ai {
   color: var(--text-muted);
   font-size: 0.72rem;
-}
-
-.prediction-main-pick {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 10px;
-  padding: 12px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-  border: 1px solid #ffcc80;
-}
-
-.pick-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #e65100;
-  text-transform: uppercase;
-}
-
-.pick-combo {
-  font-size: 1.25rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-}
-
-.pick-odds {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #5d4037;
-}
-
-.prediction-picks-table-wrap {
-  overflow-x: auto;
-}
-
-.prediction-picks-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.78rem;
-}
-
-.prediction-picks-table th,
-.prediction-picks-table td {
-  padding: 8px 6px;
-  text-align: left;
-  border-bottom: 1px solid var(--border, #eee);
-}
-
-.prediction-picks-table th {
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-.pick-row-main {
-  background: #fff8e1;
-}
-
-.pick-combo-cell {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
 }
