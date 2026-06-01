@@ -1,8 +1,5 @@
-# Render Blueprint — 競艇AI（API + 静的フロント）
+# Render Blueprint — repository root / default branch: main
 # https://render.com/docs/blueprint-spec
-#
-# 使い方: Render Dashboard → New → Blueprint → このリポジトリを選択
-# DATABASE_URL / VITE_API_URL はダッシュボードで手動設定（sync: false）
 
 services:
   - type: web
@@ -10,6 +7,7 @@ services:
     runtime: node
     plan: free
     region: singapore
+    branch: main
     rootDir: backend
     buildCommand: npm install && npm run build
     startCommand: npm run start:prod
@@ -30,9 +28,10 @@ services:
     name: boat-ai-web
     runtime: static
     plan: free
+    branch: main
     rootDir: frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    staticPublishPath: ./dist
     routes:
       - type: rewrite
         source: /*
