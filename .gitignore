@@ -1,0 +1,19 @@
+node_modules/
+dist/
+dev-dist/
+build/
+
+# Secrets（Neon / ローカル設定）
+.env
+.env.*
+!.env.example
+!.env.production.example
+backend/.env
+frontend/.env
+
+*.log
+.cursor/
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json

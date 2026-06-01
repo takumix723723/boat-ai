@@ -1,0 +1,72 @@
+.lm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.lm-header .section-title {
+  margin: 0;
+}
+
+.lm-edit-btn {
+  font-size: 0.75rem;
+  color: var(--accent);
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--accent-soft);
+}
+
+.lm-list {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.lm-list div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lm-list dt {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.lm-list dd {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.lm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lm-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.lm-form input,
+.lm-form select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.lm-updated {
+  margin: 10px 0 0;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}

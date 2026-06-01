@@ -1,0 +1,69 @@
+.ai-weights-h3 {
+  margin: 14px 0 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.ai-weights-row--active {
+  background: #e8f4fd;
+}
+
+.ai-weights-badge {
+  margin-left: 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #1565c0;
+}
+
+.ai-weights-form {
+  margin-top: 12px;
+}
+
+.ai-weights-fields {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.ai-weights-fields label,
+.ai-weights-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.ai-weights-fields input,
+.ai-weights-grid input {
+  padding: 8px 10px;
+  border: 1px solid var(--border, #dde3ea);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.ai-weights-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.ai-weights-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 0.78rem;
+}
+
+.ai-weights-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent, #1565c0);
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-align: left;
+}

@@ -1,0 +1,154 @@
+import { buildScoreDelta } from './scoreDelta.js';
+import { getActiveWeightsSync } from './ai/weightProfileService.js';
+import { DEFAULT_WEIGHTS } from './ai/weightConfig.js';
+
+/**
+ * AI点数（0-100）仮ロジック
+ * 将来: 機械学習モデル・選手DB・過去戦績に差し替え可能な純関数
+ */
+const LANE_COURSE_SCORE = {
+  1: 72,
+  2: 88,
+  3: 85,
+  4: 78,
+  5: 70,
+  6: 62,
+};
+
+const clamp = (n, min = 0, max = 100) => Math.max(min, Math.min(max, n));
+
+/** ST: 0.00〜0.30 付近を高評価 */
+function scoreSt(st) {
+  if (st == null) return 50;
+  if (st <= 0.05) return 95;
+  if (st <= 0.1) return 88;
+  if (st <= 0.15) return 78;
+  if (st <= 0.2) return 68;
+  if (st <= 0.25) return 58;
+  return 45;
+}
+
+/** 展示タイム: 6.5秒台を基準（場により調整予定） */
+function scoreExhibitionTime(time) {
+  if (time == null) return 50;
+  if (time <= 6.52) return 95;
+  if (time <= 6.58) return 85;
+  if (time <= 6.65) return 75;
+  if (time <= 6.72) return 65;
+  if (time <= 6.8) return 55;
+  return 42;
+}
+
+/** 枠順ボーナス（イン有利を簡易反映） */
+function scoreLane(lane) {
+  const base = { 1: 82, 2: 90, 3: 86, 4: 76, 5: 68, 6: 60 };
+  return base[lane] ?? 50;
+}
+
+/** モーター評価（未設定時は中立50、scoreがあれば採用） */
+function scoreMotor(motor) {
+  if (!motor) return 50;
+  if (motor.score != null) return clamp(motor.score);
+  if (motor.rate2nd != null) {
+    return clamp(Math.round(motor.rate2nd * 1.2));
+  }
+  return 50;
+}
+
+/** コース有利不利 */
+function scoreCourse(lane) {
+  return LANE_COURSE_SCORE[lane] ?? 50;
+}
+
+/** 直前情報: 風・波で微調整（レース単位で同じ値を各艇に適用） */
+function scoreLastMinute(lastMinute, lane) {
+  if (!lastMinute) return 50;
+  let base = 50;
+  const wind = lastMinute.wind ?? '';
+  if (wind.includes('向') || wind.includes('追')) {
+    const tailwindBonus = { 1: 8, 2: 5, 3: 2, 4: 0, 5: -2, 6: -4 };
+    base += tailwindBonus[lane] ?? 0;
+  }
+  if (wind.includes('逆')) {
+    const headwindBonus = { 1: -4, 2: -2, 3: 0, 4: 2, 5: 4, 6: 6 };
+    base += headwindBonus[lane] ?? 0;
+  }
+  const wave = lastMinute.wave ?? '';
+  if (wave.includes('高') || wave.includes('荒')) {
+    base -= lane <= 2 ? 3 : 0;
+    base += lane >= 5 ? 4 : 0;
+  }
+  return clamp(base);
+}
+
+/**
+ * @param {import('../types/race.js').RacerEntry} entry
+ * @param {import('../types/race.js').LastMinuteInfo} lastMinute
+ * @param {Record<string, number>} [weights]
+ */
+export function calculateAiScore(entry, lastMinute, weights = null) {
+  const w = weights ?? getActiveWeightsSync() ?? DEFAULT_WEIGHTS;
+  const breakdown = {
+    st: scoreSt(entry.st),
+    exhibitionTime: scoreExhibitionTime(entry.exhibitionTime),
+    lane: scoreLane(entry.lane),
+    motor: scoreMotor(entry.motor),
+    course: scoreCourse(entry.lane),
+    lastMinute: scoreLastMinute(lastMinute, entry.lane),
+  };
+
+  const total = Math.round(
+    breakdown.st * w.st +
+      breakdown.exhibitionTime * w.exhibitionTime +
+      breakdown.lane * w.lane +
+      breakdown.motor * w.motor +
+      breakdown.course * w.course +
+      breakdown.lastMinute * w.lastMinute
+  );
+
+  return { ...breakdown, total: clamp(total) };
+}
+
+/** レース全艇のAI点数を再計算（Live: previousAiScore / scoreDelta 付与） */
+export function applyAiScoresToRace(race) {
+  const lastMinuteChanged = race._lastMinuteChanged ?? false;
+
+  const entries = race.entries.map((e) => {
+    const previousAiScore =
+      e.previousAiScore != null ? e.previousAiScore : null;
+    const aiScore = calculateAiScore(e, race.lastMinute);
+
+    const stChanged =
+      e._oldSt != null &&
+      e.st != null &&
+      Math.abs(e._oldSt - e.st) > 0.001;
+    const exhibitionChanged =
+      e._oldExhibitionTime != null &&
+      e.exhibitionTime != null &&
+      Math.abs(e._oldExhibitionTime - e.exhibitionTime) > 0.001;
+
+    const scoreDelta = buildScoreDelta(
+      previousAiScore,
+      aiScore,
+      e._oldAiScore ?? null,
+      { stChanged, exhibitionChanged, lastMinuteChanged }
+    );
+
+    const {
+      _oldAiScore,
+      _oldSt,
+      _oldExhibitionTime,
+      ...clean
+    } = e;
+
+    return {
+      ...clean,
+      aiScore,
+      previousAiScore,
+      scoreDelta,
+    };
+  });
+
+  const { _lastMinuteChanged, ...cleanRace } = race;
+  return { ...cleanRace, entries };
+}

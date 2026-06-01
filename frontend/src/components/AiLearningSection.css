@@ -1,0 +1,166 @@
+.ai-learning {
+  margin-bottom: 16px;
+}
+
+.ai-learning-kpi {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.ai-learning-kpi-item {
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+
+.ai-learning-kpi-item .label {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.ai-learning-kpi-item .value {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 800;
+  margin-top: 2px;
+}
+
+.ai-learning-kpi-item .sub {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.ai-learning-scheduler {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.ai-learning-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ai-learning-run-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #2563eb, #06b6d4);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ai-learning-run-btn.secondary {
+  flex: 0 1 auto;
+  background: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.ai-learning-run-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ai-learning-policy {
+  margin-top: 10px;
+}
+
+.ai-learning-error {
+  color: #f87171;
+  font-size: 0.78rem;
+  margin: 8px 0 0;
+}
+
+.ai-learning-history {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.ai-learning-history-title {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.ai-learning-run-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-learning-run {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+}
+
+.ai-learning-run--applied {
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.ai-learning-run--pending {
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.ai-learning-run-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.72rem;
+}
+
+.ai-learning-run-status {
+  font-weight: 700;
+}
+
+.ai-learning-run-time {
+  color: var(--text-muted);
+}
+
+.ai-learning-run-msg {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.ai-learning-run-meta {
+  margin: 4px 0 0;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.ai-learning-apply-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.analytics-retry.subtle {
+  margin-top: 10px;
+  font-size: 0.72rem;
+  opacity: 0.8;
+}

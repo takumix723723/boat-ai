@@ -1,0 +1,99 @@
+.ai-history {
+  margin-top: 8px;
+}
+
+.ai-history-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.ai-history-sub {
+  margin: 0 0 14px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.ai-history-muted {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.ai-history-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.ai-history-hint {
+  margin: 10px 0 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.ai-history-block {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border, #e8ecf0);
+}
+
+.ai-history-block:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.ai-history-block-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.ai-history-seq {
+  font-weight: 700;
+  color: var(--text, #1a1a1a);
+}
+
+.ai-history-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ai-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.ai-history-table th,
+.ai-history-table td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border, #eef1f4);
+  white-space: nowrap;
+}
+
+.ai-history-table th {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.ai-history-name {
+  max-width: 5.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-history-score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,48 @@
+.race-deadline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.urgency-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.race-deadline-text {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.countdown {
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.urgency-hot .countdown {
+  color: #f87171;
+}
+
+.urgency-warn .countdown {
+  color: #fbbf24;
+}
+
+.urgency-past .countdown {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.urgency-soon .countdown {
+  color: var(--text);
+}
+
+.start-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}

@@ -1,0 +1,42 @@
+# Render Blueprint — 競艇AI（API + 静的フロント）
+# https://render.com/docs/blueprint-spec
+#
+# 使い方: Render Dashboard → New → Blueprint → このリポジトリを選択
+# DATABASE_URL / VITE_API_URL はダッシュボードで手動設定（sync: false）
+
+services:
+  - type: web
+    name: boat-ai-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_ENV
+        value: production
+      - key: BOATRACE_DATA_MODE
+        value: auto
+      - key: PERSIST_SNAPSHOTS
+        value: "true"
+      - key: DATABASE_URL
+        sync: false
+
+  - type: web
+    name: boat-ai-web
+    runtime: static
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false

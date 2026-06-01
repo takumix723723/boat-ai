@@ -1,0 +1,82 @@
+.venue-filter-wrap {
+  position: sticky;
+  top: 56px;
+  z-index: 8;
+  margin: 0 -16px 12px;
+  padding: 8px 16px 10px;
+  background: linear-gradient(180deg, rgba(10, 14, 23, 0.98) 70%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.venue-filter {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.venue-filter::-webkit-scrollbar {
+  display: none;
+}
+
+.venue-chip-wrap {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 4px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.venue-chip-wrap.is-fav {
+  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.06);
+}
+
+.venue-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.venue-fav-mark {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.venue-chip.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.venue-chip-label {
+  white-space: nowrap;
+}
+
+.venue-chip-count {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.venue-chip.active .venue-chip-count {
+  background: rgba(59, 130, 246, 0.25);
+  color: #93c5fd;
+}

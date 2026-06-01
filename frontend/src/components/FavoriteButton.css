@@ -1,0 +1,38 @@
+.favorite-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  padding: 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.favorite-btn:active {
+  transform: scale(0.92);
+}
+
+.favorite-btn--md .favorite-btn-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.favorite-btn--sm .favorite-btn-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.favorite-btn--venue.active {
+  background: rgba(251, 191, 36, 0.15);
+}
+
+.favorite-btn--racer.active {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.favorite-btn:not(.active):hover {
+  background: var(--bg-elevated);
+}

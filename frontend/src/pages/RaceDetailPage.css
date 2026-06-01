@@ -1,0 +1,44 @@
+.race-hero-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.race-hero-top .favorite-btn {
+  margin-right: 2px;
+}
+
+.race-hero-top .page-title {
+  margin: 0;
+}
+
+.race-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.ai-section {
+  margin-top: 8px;
+}
+
+.ai-section-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.ai-section-sub {
+  margin: 0 0 14px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.detail-live-sub {
+  margin: -4px 0 12px;
+}

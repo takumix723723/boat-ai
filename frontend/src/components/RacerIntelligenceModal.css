@@ -1,0 +1,159 @@
+.racer-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 12px;
+}
+
+.racer-modal {
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 16px;
+  border-radius: 16px 16px 12px 12px;
+}
+
+.racer-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.racer-modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.racer-modal-sub {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.racer-modal-close {
+  border: none;
+  background: #f0f2f5;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.racer-modal-warn {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff8e1;
+  font-size: 0.78rem;
+  color: #6d4c00;
+  line-height: 1.4;
+}
+
+.racer-modal-muted,
+.racer-modal-error {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.racer-modal-error {
+  color: #c62828;
+}
+
+.racer-modal-confidence {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.racer-modal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.racer-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #eceff1;
+  color: #455a64;
+}
+
+.racer-tag--positive {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.racer-tag--warn {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.racer-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.racer-modal-stat {
+  padding: 10px;
+  border-radius: 8px;
+  background: #f7f9fb;
+}
+
+.racer-modal-stat .label {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.racer-modal-stat .value {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.racer-modal-stat .sub {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.racer-modal-h3 {
+  margin: 12px 0 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.racer-modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.racer-modal-table th,
+.racer-modal-table td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid #eef1f4;
+}
+
+.racer-modal-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+}

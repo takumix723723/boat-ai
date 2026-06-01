@@ -1,0 +1,140 @@
+// Phase6: 最小データ基盤（履歴スナップショット）
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Racer {
+  id        String      @id @db.VarChar(10)
+  name      String      @db.VarChar(100)
+  rank      String?     @db.VarChar(10)
+  branch    String?     @db.VarChar(50)
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  entries   RaceEntry[]
+
+  @@map("racers")
+}
+
+model Race {
+  id         String         @id @default(uuid()) @db.Uuid
+  externalId String         @unique @map("external_id") @db.VarChar(32)
+  raceDate   DateTime       @map("race_date") @db.Date
+  venueCode  String         @map("venue_code") @db.VarChar(2)
+  venueName  String         @map("venue_name") @db.VarChar(50)
+  raceNo     Int            @map("race_no")
+  grade      String?        @db.VarChar(100)
+  closedAt       DateTime?      @map("closed_at") @db.Timestamptz(6)
+  officialResult Json?          @map("official_result") @db.JsonB
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  entries    RaceEntry[]
+  snapshots  RaceSnapshot[]
+
+  @@unique([raceDate, venueCode, raceNo])
+  @@index([raceDate])
+  @@map("races")
+}
+
+model RaceEntry {
+  id        String     @id @default(uuid()) @db.Uuid
+  raceId    String     @map("race_id") @db.Uuid
+  lane      Int
+  racerId   String     @map("racer_id") @db.VarChar(10)
+  motor     Json?      @db.JsonB
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  race      Race       @relation(fields: [raceId], references: [id], onDelete: Cascade)
+  racer     Racer      @relation(fields: [racerId], references: [id])
+  aiScores  AiScore[]
+
+  @@unique([raceId, lane])
+  @@index([racerId])
+  @@map("race_entries")
+}
+
+model RaceSnapshot {
+  id          String    @id @default(uuid()) @db.Uuid
+  raceId      String    @map("race_id") @db.Uuid
+  capturedAt  DateTime  @map("captured_at") @db.Timestamptz(6)
+  sequence    Int
+  status      String?   @db.VarChar(20)
+  startTime   String?   @map("start_time") @db.VarChar(10)
+  lastMinute  Json?     @map("last_minute") @db.JsonB
+  dataSource  String?   @map("data_source") @db.VarChar(20)
+  meta            Json?     @db.JsonB
+  officialResult  Json?     @map("official_result") @db.JsonB
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  race            Race      @relation(fields: [raceId], references: [id], onDelete: Cascade)
+  aiScores    AiScore[]
+
+  @@unique([raceId, sequence])
+  @@index([raceId, capturedAt])
+  @@map("race_snapshots")
+}
+
+model AiWeightProfile {
+  id               String   @id @default(uuid()) @db.Uuid
+  name             String   @unique @db.VarChar(50)
+  label            String   @db.VarChar(100)
+  isActive         Boolean  @default(false) @map("is_active")
+  weightSt         Decimal  @map("weight_st") @db.Decimal(6, 4)
+  weightExhibition Decimal  @map("weight_exhibition") @db.Decimal(6, 4)
+  weightLane       Decimal  @map("weight_lane") @db.Decimal(6, 4)
+  weightMotor      Decimal  @map("weight_motor") @db.Decimal(6, 4)
+  weightCourse     Decimal  @map("weight_course") @db.Decimal(6, 4)
+  weightLastMinute Decimal  @map("weight_last_minute") @db.Decimal(6, 4)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("ai_weight_profiles")
+}
+
+/// Phase16: 自動学習の実行履歴（2段階: suggest / auto）
+model AiLearningRun {
+  id                String   @id @default(uuid()) @db.Uuid
+  runAt             DateTime @default(now()) @map("run_at") @db.Timestamptz(6)
+  triggerSource     String   @map("trigger_source") @db.VarChar(20)
+  mode              String   @db.VarChar(20)
+  raceCount         Int      @map("race_count")
+  trialCount        Int?     @map("trial_count")
+  baselineAccuracy  Json     @map("baseline_accuracy") @db.JsonB
+  optimizedAccuracy Json     @map("optimized_accuracy") @db.JsonB
+  improvement       Decimal  @db.Decimal(8, 4)
+  selectedProfile   Json     @map("selected_profile") @db.JsonB
+  status            String   @db.VarChar(20)
+  applied           Boolean  @default(false)
+  message           String?  @db.VarChar(500)
+  overfitFlagged    Boolean  @default(false) @map("overfit_flagged")
+  meta              Json?    @db.JsonB
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([runAt(sort: Desc)])
+  @@index([status])
+  @@map("ai_learning_runs")
+}
+
+model AiScore {
+  id              String       @id @default(uuid()) @db.Uuid
+  snapshotId      String       @map("snapshot_id") @db.Uuid
+  raceEntryId     String       @map("race_entry_id") @db.Uuid
+  total           Int
+  previousTotal   Int?         @map("previous_total")
+  breakdown       Json?        @db.JsonB
+  scoreDelta      Json?        @map("score_delta") @db.JsonB
+  st              Decimal?     @db.Decimal(5, 3)
+  exhibitionTime  Decimal?     @map("exhibition_time") @db.Decimal(5, 3)
+  tilt            Decimal?     @db.Decimal(4, 2)
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  snapshot        RaceSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  raceEntry       RaceEntry    @relation(fields: [raceEntryId], references: [id], onDelete: Cascade)
+
+  @@unique([snapshotId, raceEntryId])
+  @@index([raceEntryId])
+  @@map("ai_scores")
+}

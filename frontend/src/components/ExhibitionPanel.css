@@ -1,0 +1,42 @@
+.exhibition-panel .empty-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.exhibition-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.exhibition-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(42, 54, 80, 0.4);
+}
+
+.exhibition-row:last-child {
+  border-bottom: none;
+}
+
+.exhibition-stats {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.stat-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

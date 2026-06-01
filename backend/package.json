@@ -1,0 +1,31 @@
+{
+  "name": "boat-ai-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "start:prod": "npm run db:migrate:deploy && node src/index.js",
+    "build": "prisma generate",
+    "postinstall": "prisma generate",
+    "verify:prod": "node scripts/verify-production.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "db:check": "node scripts/check-db.js",
+    "db:set-url": "node scripts/apply-database-url.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.9.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "prisma": "^6.9.0"
+  }
+}

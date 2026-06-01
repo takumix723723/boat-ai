@@ -1,0 +1,124 @@
+.analytics-page .page-sub {
+  margin: 0 0 16px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.analytics-kpi {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 14px;
+}
+
+.analytics-kpi-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.analytics-kpi-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.analytics-kpi-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent, #1565c0);
+}
+
+.analytics-kpi-sub {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.analytics-summary {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+}
+
+.analytics-section-title {
+  margin: 0 0 10px;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.analytics-venues {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+}
+
+.analytics-table-wrap {
+  overflow-x: auto;
+}
+
+.analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.analytics-table th,
+.analytics-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border, #eef1f4);
+}
+
+.analytics-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.7rem;
+}
+
+.analytics-table--venues td {
+  white-space: nowrap;
+}
+
+.analytics-empty {
+  margin: 0 0 8px;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.analytics-hint {
+  margin: 0 0 16px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.analytics-formulas {
+  margin-bottom: 16px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.analytics-formulas ul {
+  margin: 8px 0 0;
+  padding-left: 1.2rem;
+  line-height: 1.5;
+}
+
+.analytics-retry {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid var(--border, #dde3ea);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.analytics-retry:active {
+  opacity: 0.85;
+}
