@@ -1,9 +1,18 @@
 import { useEffect, useState } from 'react';
 import { fetchRaceHistory } from '../api/client';
-import ScoreDeltaBadge from './ScoreDeltaBadge';
 import './AiHistorySection.css';
 
-function formatCapturedAt(iso) {
+function formatUpdatedAt(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatHistoryAt(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -12,13 +21,77 @@ function formatCapturedAt(iso) {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit',
   });
 }
 
-function formatNum(value, digits = 2) {
-  if (value == null || Number.isNaN(value)) return '—';
-  return Number(value).toFixed(digits);
+/**
+ * @param {object} entry
+ * @returns {{ label: string, arrow: string, tone: 'up'|'down'|'flat' }}
+ */
+function getLaneDeltaDisplay(entry) {
+  const delta = entry.scoreDelta;
+  if (!delta || delta.diff === 0) {
+    return { label: '±0', arrow: '', tone: 'flat' };
+  }
+  const sign = delta.diff > 0 ? '+' : '';
+  return {
+    label: `${sign}${delta.diff}`,
+    arrow: delta.direction === 'up' ? '↑' : '↓',
+    tone: delta.direction === 'up' ? 'up' : 'down',
+  };
+}
+
+function LatestSnapshot({ snap }) {
+  return (
+    <div className="ai-latest">
+      <p className="ai-latest-updated">
+        更新 <time dateTime={snap.capturedAt}>{formatUpdatedAt(snap.capturedAt)}</time>
+        {snap.status && (
+          <span className="ai-latest-status">{snap.status}</span>
+        )}
+      </p>
+      <ul className="ai-latest-list">
+        {snap.entries.map((entry) => {
+          const { label, arrow, tone } = getLaneDeltaDisplay(entry);
+          return (
+            <li key={entry.lane} className={`ai-latest-row ai-delta--${tone}`}>
+              <span className="ai-latest-lane">{entry.lane}号艇</span>
+              <span className="ai-latest-delta">
+                {label}
+                {arrow && <span className="ai-latest-arrow"> {arrow}</span>}
+              </span>
+              <span className="ai-latest-score">{entry.aiScore?.total ?? '—'}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function PastSnapshotBlock({ snap }) {
+  return (
+    <div className="ai-past-block">
+      <time className="ai-past-time" dateTime={snap.capturedAt}>
+        {formatHistoryAt(snap.capturedAt)}
+      </time>
+      <ul className="ai-past-list">
+        {snap.entries.map((entry) => {
+          const { label, arrow, tone } = getLaneDeltaDisplay(entry);
+          return (
+            <li key={entry.lane} className={`ai-past-row ai-delta--${tone}`}>
+              <span>{entry.lane}号</span>
+              <span>
+                {label}
+                {arrow && ` ${arrow}`}
+              </span>
+              <span className="ai-past-score">{entry.aiScore?.total ?? '—'}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
 }
 
 /**
@@ -28,11 +101,13 @@ export default function AiHistorySection({ raceId, refreshKey = null }) {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState(null);
   const [error, setError] = useState(null);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setExpanded(false);
 
     fetchRaceHistory(raceId)
       .then((res) => {
@@ -53,8 +128,8 @@ export default function AiHistorySection({ raceId, refreshKey = null }) {
   if (loading) {
     return (
       <section className="ai-history card">
-        <h2 className="ai-history-title">AI推移</h2>
-        <p className="ai-history-muted">履歴を読み込み中…</p>
+        <h2 className="ai-history-title">AI最新評価</h2>
+        <p className="ai-history-muted">読み込み中…</p>
       </section>
     );
   }
@@ -62,7 +137,7 @@ export default function AiHistorySection({ raceId, refreshKey = null }) {
   if (error) {
     return (
       <section className="ai-history card">
-        <h2 className="ai-history-title">AI推移</h2>
+        <h2 className="ai-history-title">AI最新評価</h2>
         <p className="ai-history-empty">{error}</p>
       </section>
     );
@@ -71,7 +146,7 @@ export default function AiHistorySection({ raceId, refreshKey = null }) {
   if (!history?.available) {
     return (
       <section className="ai-history card">
-        <h2 className="ai-history-title">AI推移</h2>
+        <h2 className="ai-history-title">AI最新評価</h2>
         <p className="ai-history-empty">
           {history?.message ?? '保存された履歴がありません。'}
         </p>
@@ -85,59 +160,45 @@ export default function AiHistorySection({ raceId, refreshKey = null }) {
     );
   }
 
+  const snapshots = history.snapshots ?? [];
+  const latest = snapshots[snapshots.length - 1];
+  const pastSnapshots = snapshots.length > 1 ? snapshots.slice(0, -1).reverse() : [];
+
   return (
     <section className="ai-history card">
-      <h2 className="ai-history-title">AI推移</h2>
-      <p className="ai-history-sub">
-        DB保存スナップショット {history.snapshotCount} 件 · 各更新時点の AI 点数
-      </p>
+      <h2 className="ai-history-title">AI最新評価</h2>
 
-      {history.snapshots.map((snap) => (
-        <div key={`${snap.sequence}-${snap.capturedAt}`} className="ai-history-block">
-          <div className="ai-history-block-head">
-            <span className="ai-history-seq">#{snap.sequence}</span>
-            <time dateTime={snap.capturedAt}>{formatCapturedAt(snap.capturedAt)}</time>
-            {snap.status && (
-              <span className="badge status-done">{snap.status}</span>
-            )}
-          </div>
+      {latest && <LatestSnapshot snap={latest} />}
 
-          <div className="ai-history-table-wrap">
-            <table className="ai-history-table">
-              <thead>
-                <tr>
-                  <th>枠</th>
-                  <th>選手</th>
-                  <th>AI</th>
-                  <th>変動</th>
-                  <th>ST</th>
-                  <th>展示</th>
-                </tr>
-              </thead>
-              <tbody>
-                {snap.entries.map((entry) => (
-                  <tr key={entry.lane}>
-                    <td>{entry.lane}</td>
-                    <td className="ai-history-name">{entry.name}</td>
-                    <td className="ai-history-score">{entry.aiScore?.total ?? '—'}</td>
-                    <td>
-                      <ScoreDeltaBadge delta={entry.scoreDelta} size="sm" />
-                      {!entry.scoreDelta && entry.previousTotal != null && (
-                        <span className="ai-history-muted">—</span>
-                      )}
-                      {!entry.scoreDelta && entry.previousTotal == null && (
-                        <span className="ai-history-muted">初回</span>
-                      )}
-                    </td>
-                    <td>{formatNum(entry.st, 2)}</td>
-                    <td>{formatNum(entry.exhibitionTime, 2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {pastSnapshots.length > 0 && (
+        <div className="ai-history-past">
+          <button
+            type="button"
+            className="ai-history-toggle"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+          >
+            {expanded ? '履歴を閉じる' : '履歴を見る'}
+            <span className="ai-history-toggle-icon" aria-hidden>
+              {expanded ? '▲' : '▼'}
+            </span>
+          </button>
+
+          {expanded && (
+            <div className="ai-history-past-panel">
+              {pastSnapshots.map((snap) => (
+                <PastSnapshotBlock
+                  key={`${snap.sequence}-${snap.capturedAt}`}
+                  snap={snap}
+                />
+              ))}
+              <p className="ai-history-count" aria-label="保存件数">
+                {history.snapshotCount}件保存
+              </p>
+            </div>
+          )}
         </div>
-      ))}
+      )}
     </section>
   );
 }
