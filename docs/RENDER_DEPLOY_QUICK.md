@@ -11,7 +11,7 @@ Cursor から Render へ**直接デプロイはできません**（Render ログ
 |------|------|
 | `render.yaml` | ✅ ルートにあり（API + Static） |
 | Backend build | `npm install && npm run build`（= prisma generate） |
-| Backend start | `npm run start:prod`（migrate + listen） |
+| Backend start | `npm run start:prod`（API 即起動、migrate は非ブロック） |
 | Frontend build | `npm run build` → `dist/` |
 | Health | `/api/health` |
 | PWA | HTTPS Static でインストール可（Phase15） |

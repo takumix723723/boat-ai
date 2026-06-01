@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
-    "start:prod": "npm run db:migrate:deploy && node src/index.js",
+    "start:prod": "node scripts/start-production.js",
     "build": "prisma generate",
     "postinstall": "prisma generate",
     "verify:prod": "node scripts/verify-production.js",

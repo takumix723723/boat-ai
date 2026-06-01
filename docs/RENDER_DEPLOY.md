@@ -72,8 +72,9 @@ npm run db:migrate:deploy
 
 3. この文字列を後で Render の `DATABASE_URL` に貼る
 
-マイグレーションは **API 起動時**（`npm run start:prod`）に `prisma migrate deploy` が走ります。  
-初回デプロイ前にローカルで `db:migrate:deploy` 済みでも問題ありません。
+マイグレーションは **API 起動時**（`start-production.js`）にバックグラウンドで `prisma migrate deploy` を試行します。  
+P1002（advisory lock）でタイムアウトしても **HTTP サーバーは起動します**。  
+初回スキーマ適用は Render Shell またはローカルから `npm run db:migrate:deploy` を推奨。
 
 ---
 
