@@ -1,4 +1,5 @@
 import { buildRaceId, raceKey } from './normalizer.js';
+import { PENDING_OFFICIAL_RESULT } from '../results/officialResultPolicy.js';
 
 /**
  * Open API results → raceId 別 officialResult
@@ -53,13 +54,7 @@ export function attachResultsToRaces(races, resultMap) {
     }
     return {
       ...race,
-      officialResult: race.officialResult ?? {
-        available: false,
-        reason: 'pending',
-        message: 'レース結果はまだ取得できていません',
-        source: null,
-        placements: [],
-      },
+      officialResult: race.officialResult ?? { ...PENDING_OFFICIAL_RESULT },
     };
   });
 }

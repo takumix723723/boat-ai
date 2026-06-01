@@ -1,6 +1,7 @@
 import { getPrisma } from '../../db/client.js';
 import { getMockRaces } from '../../data/mockRaces.js';
 import { applyAiScoresToRace } from '../aiScore.js';
+import { isRealOfficialResult } from '../results/officialResultPolicy.js';
 
 const MIN_SAMPLES = 3;
 const RECENT_LIMIT = 5;
@@ -10,8 +11,7 @@ function isDatabaseConfigured() {
 }
 
 function parsePlacements(officialResult) {
-  if (!officialResult || typeof officialResult !== 'object') return [];
-  if (!officialResult.available || !Array.isArray(officialResult.placements)) return [];
+  if (!isRealOfficialResult(officialResult)) return [];
   return officialResult.placements;
 }
 

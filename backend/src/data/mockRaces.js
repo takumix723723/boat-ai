@@ -1,6 +1,9 @@
 const now = new Date().toISOString();
 
-/** 検証用: entries から公式着順を生成（Phase16 学習データ確保） */
+/**
+ * テスト・学習スクリプト専用（本番UI/APIでは使用しない）
+ * entries から仮着順を生成
+ */
 export function buildMockOfficialResult(entries, winnerLane = 1) {
   const lanes = entries.map((e) => e.lane);
   const ordered = [
@@ -122,19 +125,6 @@ const rawRaces = [
       wave: '静穏',
       remark: '水面やや張り',
       updatedAt: now,
-    },
-    officialResult: {
-      available: true,
-      source: 'mock',
-      fetchedAt: now,
-      placements: [
-        { place: 1, lane: 3, racerId: '4512', name: '佐藤次郎' },
-        { place: 2, lane: 1, racerId: '4123', name: '山田太郎' },
-        { place: 3, lane: 5, racerId: '4234', name: '高橋四郎' },
-        { place: 4, lane: 2, racerId: '3891', name: '鈴木一郎' },
-        { place: 5, lane: 6, racerId: '3901', name: '伊藤五郎' },
-        { place: 6, lane: 4, racerId: '3678', name: '田中三郎' },
-      ],
     },
     entries: [
       {
@@ -411,15 +401,6 @@ const rawRaces = [
   },
 ];
 
-/** レースごとの1着枠（学習用に着順をばらつかせる） */
-const MOCK_WINNER_LANE = {
-  '20260601-toda-10': 3,
-  '20260601-toda-12': 4,
-  '20260601-edogawa-10': 2,
-  '20260601-edogawa-11': 1,
-  '20260601-toda-13': 1,
-};
-
 /** モック: 旧 score フィールドを号機+2連率形式へ（号機はAIに使わない） */
 function normalizeMockMotor(motor, lane) {
   if (!motor) return motor;
@@ -447,9 +428,13 @@ export function getMockRaces() {
         motor: normalizeMockMotor(e.motor, e.lane),
       })),
     };
-    if (copy.officialResult?.available) return copy;
-    const winnerLane = MOCK_WINNER_LANE[copy.id] ?? 1;
-    copy.officialResult = buildMockOfficialResult(copy.entries, winnerLane);
+    copy.officialResult = {
+      available: false,
+      reason: 'pending',
+      message: '結果未確定（レース前 / 開催中）',
+      source: null,
+      placements: [],
+    };
     return copy;
   });
 }

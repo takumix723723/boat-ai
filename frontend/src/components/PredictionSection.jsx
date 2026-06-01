@@ -5,7 +5,9 @@ import {
   formatApiError,
   getApiBaseDebug,
 } from '../api/client';
+import RaceInfoHeader from './RaceInfoHeader';
 import './PredictionSection.css';
+import './RaceInfoHeader.css';
 
 function ConfBadge({ percent, tier = 'medium' }) {
   const dot = tier === 'high' ? '🟢' : tier === 'medium' ? '🟡' : '🟠';
@@ -114,9 +116,14 @@ function AiBrief({ aiComment }) {
 }
 
 /**
- * @param {{ raceId: string, refreshKey?: string|number|null }} props
+ * @param {{ raceId: string, race?: object|null, meta?: object|null, refreshKey?: string|number|null }} props
  */
-export default function PredictionSection({ raceId, refreshKey = null }) {
+export default function PredictionSection({
+  raceId,
+  race = null,
+  meta = null,
+  refreshKey = null,
+}) {
   const [loading, setLoading] = useState(true);
   const [prediction, setPrediction] = useState(null);
   const [error, setError] = useState(null);
@@ -163,8 +170,8 @@ export default function PredictionSection({ raceId, refreshKey = null }) {
 
   if (loading) {
     return (
-      <section className="prediction card">
-        <h2 className="prediction-title">AI買い目提案</h2>
+      <section className="prediction card prediction--dark">
+        <RaceInfoHeader race={race} meta={meta} sectionTitle="AI買い目提案" />
         <p className="prediction-muted">読み込み中…</p>
       </section>
     );
@@ -173,8 +180,8 @@ export default function PredictionSection({ raceId, refreshKey = null }) {
   if (error) {
     const apiDebug = getApiBaseDebug();
     return (
-      <section className="prediction card">
-        <h2 className="prediction-title">AI買い目提案</h2>
+      <section className="prediction card prediction--dark">
+        <RaceInfoHeader race={race} meta={meta} sectionTitle="AI買い目提案" />
         <p className="prediction-empty prediction-error-main">{error}</p>
         {errorDetail?.url && (
           <p className="prediction-hint prediction-error-url">{errorDetail.url}</p>
@@ -186,8 +193,8 @@ export default function PredictionSection({ raceId, refreshKey = null }) {
 
   if (!prediction?.available) {
     return (
-      <section className="prediction card">
-        <h2 className="prediction-title">AI買い目提案</h2>
+      <section className="prediction card prediction--dark">
+        <RaceInfoHeader race={race} meta={meta} sectionTitle="AI買い目提案" />
         <p className="prediction-empty">
           {prediction?.message ?? '予想を表示できません'}
         </p>
@@ -201,7 +208,7 @@ export default function PredictionSection({ raceId, refreshKey = null }) {
 
   return (
     <section className="prediction card prediction--dark">
-      <h2 className="prediction-title">AI買い目提案</h2>
+      <RaceInfoHeader race={race} meta={meta} sectionTitle="AI買い目提案" />
 
       <HonmeiCard honmei={honmeiRec} guide={bettingGuide} />
       <BettingPicks guide={bettingGuide} recommendations={recommendations} />

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { fetchRaceHistory } from '../api/client';
+import RaceInfoHeader from './RaceInfoHeader';
 import './AiHistorySection.css';
+import './RaceInfoHeader.css';
 
 function formatUpdatedAt(iso) {
   if (!iso) return '—';
@@ -95,9 +97,14 @@ function PastSnapshotBlock({ snap }) {
 }
 
 /**
- * @param {{ raceId: string, refreshKey?: string|number|null }} props
+ * @param {{ raceId: string, race?: object|null, meta?: object|null, refreshKey?: string|number|null }} props
  */
-export default function AiHistorySection({ raceId, refreshKey = null }) {
+export default function AiHistorySection({
+  raceId,
+  race = null,
+  meta = null,
+  refreshKey = null,
+}) {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState(null);
   const [error, setError] = useState(null);
@@ -125,10 +132,24 @@ export default function AiHistorySection({ raceId, refreshKey = null }) {
     };
   }, [raceId, refreshKey]);
 
+  const raceForHeader =
+    race ??
+    (history?.venueName
+      ? {
+          id: raceId,
+          venueName: history.venueName,
+          raceNo: history.raceNo,
+        }
+      : { id: raceId });
+
   if (loading) {
     return (
       <section className="ai-history card">
-        <h2 className="ai-history-title">AI最新評価</h2>
+        <RaceInfoHeader
+          race={raceForHeader}
+          meta={meta}
+          sectionTitle="AI推移 / 履歴"
+        />
         <p className="ai-history-muted">読み込み中…</p>
       </section>
     );
@@ -137,7 +158,11 @@ export default function AiHistorySection({ raceId, refreshKey = null }) {
   if (error) {
     return (
       <section className="ai-history card">
-        <h2 className="ai-history-title">AI最新評価</h2>
+        <RaceInfoHeader
+          race={raceForHeader}
+          meta={meta}
+          sectionTitle="AI推移 / 履歴"
+        />
         <p className="ai-history-empty">{error}</p>
       </section>
     );
@@ -146,7 +171,11 @@ export default function AiHistorySection({ raceId, refreshKey = null }) {
   if (!history?.available) {
     return (
       <section className="ai-history card">
-        <h2 className="ai-history-title">AI最新評価</h2>
+        <RaceInfoHeader
+          race={raceForHeader}
+          meta={meta}
+          sectionTitle="AI推移 / 履歴"
+        />
         <p className="ai-history-empty">
           {history?.message ?? '保存された履歴がありません。'}
         </p>
@@ -166,7 +195,11 @@ export default function AiHistorySection({ raceId, refreshKey = null }) {
 
   return (
     <section className="ai-history card">
-      <h2 className="ai-history-title">AI最新評価</h2>
+      <RaceInfoHeader
+        race={raceForHeader}
+        meta={meta}
+        sectionTitle="AI推移 / 履歴"
+      />
 
       {latest && <LatestSnapshot snap={latest} />}
 

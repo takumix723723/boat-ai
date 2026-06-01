@@ -17,8 +17,10 @@ import FavoriteButton from '../components/FavoriteButton';
 import AiHistorySection from '../components/AiHistorySection';
 import RaceResultSection from '../components/RaceResultSection';
 import PredictionSection from '../components/PredictionSection';
+import RaceInfoHeader from '../components/RaceInfoHeader';
 import RacerIntelligenceModal from '../components/RacerIntelligenceModal';
 import './RaceDetailPage.css';
+import '../components/RaceInfoHeader.css';
 
 export default function RaceDetailPage() {
   const { id } = useParams();
@@ -104,28 +106,23 @@ export default function RaceDetailPage() {
       </p>
 
       <div className="race-hero card">
-        <div className="race-hero-top">
+        <RaceInfoHeader race={race} meta={meta ?? race.meta} compact={false} />
+        <div className="race-hero-badges">
           <FavoriteButton
             kind="venue"
             active={venueFav}
             onToggle={() => toggleVenue(race.venueCode, race.venueName)}
           />
-          <h1 className="page-title">
-            {race.venueName} {race.raceNo}R
-          </h1>
           <span
             className={`badge ${race.grade?.includes('G') ? 'grade-g1' : 'grade-normal'}`}
           >
             {race.grade}
           </span>
-        </div>
-        <div className="race-hero-meta">
           <span
             className={`badge ${race.status === '直前' ? 'status-live' : 'status-done'}`}
           >
             {race.status}
           </span>
-          <span>{race.startTime} 締切</span>
         </div>
       </div>
 
@@ -141,11 +138,26 @@ export default function RaceDetailPage() {
 
       <EntryTable entries={race.entries} />
 
-      <PredictionSection raceId={race.id} refreshKey={lastUpdated} />
+      <PredictionSection
+        raceId={race.id}
+        race={race}
+        meta={meta ?? race.meta}
+        refreshKey={lastUpdated}
+      />
 
-      <RaceResultSection raceId={race.id} refreshKey={lastUpdated} />
+      <RaceResultSection
+        raceId={race.id}
+        race={race}
+        meta={meta ?? race.meta}
+        refreshKey={lastUpdated}
+      />
 
-      <AiHistorySection raceId={race.id} refreshKey={lastUpdated} />
+      <AiHistorySection
+        raceId={race.id}
+        race={race}
+        meta={meta ?? race.meta}
+        refreshKey={lastUpdated}
+      />
 
       <section className="ai-section">
         <h2 className="ai-section-title">AI総合評価</h2>

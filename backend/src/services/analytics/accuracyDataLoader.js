@@ -1,8 +1,8 @@
 import { getPrisma } from '../../db/client.js';
+import { isRealOfficialResult } from '../results/officialResultPolicy.js';
 
 export function parseOfficialResult(json) {
-  if (!json || typeof json !== 'object') return null;
-  if (!json.available || !Array.isArray(json.placements)) return null;
+  if (!isRealOfficialResult(json)) return null;
   return json.placements;
 }
 

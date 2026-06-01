@@ -1,13 +1,10 @@
 import { getPrisma } from '../../db/client.js';
 import { buildAiVerification } from './aiVerification.js';
-
-const PENDING = {
-  available: false,
-  reason: 'pending',
-  message: 'レース結果はまだ取得できていません',
-  source: null,
-  placements: [],
-};
+import {
+  isRealOfficialResult,
+  normalizeOfficialResultForDisplay,
+  PENDING_OFFICIAL_RESULT,
+} from './officialResultPolicy.js';
 
 function isDatabaseConfigured() {
   return Boolean(process.env.DATABASE_URL?.trim());
@@ -16,9 +13,22 @@ function isDatabaseConfigured() {
 /**
  * @param {object|null} memoryRace - インメモリ Race（AI比較用）
  * @param {string} externalRaceId
+ * @param {{ dataSource?: string|null }} [options]
  */
-export async function getRaceResult(externalRaceId, memoryRace = null) {
-  let officialResult = memoryRace?.officialResult ?? PENDING;
+export async function getRaceResult(externalRaceId, memoryRace = null, options = {}) {
+  const memoryId = memoryRace?.id ?? null;
+  if (memoryId && memoryId !== externalRaceId) {
+    memoryRace = null;
+  }
+
+  const fromMemory = memoryRace?.officialResult ?? null;
+  let officialResult = isRealOfficialResult(fromMemory)
+    ? fromMemory
+    : { ...PENDING_OFFICIAL_RESULT };
+
+  if (options.dataSource === 'mock') {
+    officialResult = { ...PENDING_OFFICIAL_RESULT };
+  }
   let savedToDb = false;
   let savedOnSnapshot = false;
   let predictionSource = 'live_memory';
@@ -57,15 +67,15 @@ export async function getRaceResult(externalRaceId, memoryRace = null) {
 
       if (row?.officialResult && typeof row.officialResult === 'object') {
         const dbResult = row.officialResult;
-        if (dbResult.available) {
+        if (isRealOfficialResult(dbResult)) {
           savedToDb = true;
-          if (!officialResult.available) officialResult = dbResult;
+          if (!isRealOfficialResult(officialResult)) officialResult = dbResult;
         }
       }
 
       const snap = row?.snapshots?.[0];
       if (snap?.officialResult && typeof snap.officialResult === 'object') {
-        if (snap.officialResult.available) savedOnSnapshot = true;
+        if (isRealOfficialResult(snap.officialResult)) savedOnSnapshot = true;
       }
 
       if (snap?.aiScores?.length) {
@@ -91,22 +101,32 @@ export async function getRaceResult(externalRaceId, memoryRace = null) {
     }
   }
 
-  const placements = officialResult?.available ? officialResult.placements : [];
-  const aiVerification = buildAiVerification(entriesForAi, placements);
+  officialResult = normalizeOfficialResultForDisplay(
+    officialResult,
+    externalRaceId
+  );
+
+  const displayable = isRealOfficialResult(officialResult);
+  const placements = displayable ? officialResult.placements : [];
+  const aiVerification = displayable
+    ? buildAiVerification(entriesForAi, placements)
+    : null;
 
   return {
     raceId: externalRaceId,
-    available: Boolean(officialResult?.available),
-    reason: officialResult?.available ? null : officialResult?.reason ?? 'pending',
-    message: officialResult?.available
+    venueName: memoryRace?.venueName ?? null,
+    raceNo: memoryRace?.raceNo ?? null,
+    available: displayable,
+    reason: displayable ? null : officialResult?.reason ?? 'pending',
+    message: displayable
       ? null
-      : officialResult?.message ?? PENDING.message,
+      : officialResult?.message ?? PENDING_OFFICIAL_RESULT.message,
     savedToDb,
     savedOnSnapshot,
-    source: officialResult?.source ?? null,
-    fetchedAt: officialResult?.fetchedAt ?? null,
+    source: displayable ? officialResult.source : null,
+    fetchedAt: displayable ? officialResult.fetchedAt ?? null : null,
     placements,
-    payouts: officialResult?.payouts ?? null,
+    payouts: displayable ? officialResult.payouts ?? null : null,
     predictionSource,
     predictionCapturedAt,
     aiVerification,

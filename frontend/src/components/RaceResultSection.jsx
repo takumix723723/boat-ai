@@ -1,13 +1,25 @@
 import { useEffect, useState } from 'react';
 import { fetchRaceResult } from '../api/client';
+import RaceInfoHeader from './RaceInfoHeader';
+import {
+  isResultDisplayable,
+  RESULT_PENDING_MESSAGE,
+} from '../utils/raceResultDisplay';
 import './RaceResultSection.css';
+import './RaceInfoHeader.css';
 
 /**
- * @param {{ raceId: string, refreshKey?: string|number|null }} props
+ * @param {{ raceId: string, race?: object|null, meta?: object|null, refreshKey?: string|number|null }} props
  */
-export default function RaceResultSection({ raceId, refreshKey = null }) {
+export default function RaceResultSection({
+  raceId,
+  race = null,
+  meta = null,
+  refreshKey = null,
+}) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
+  const [resultMeta, setResultMeta] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -17,7 +29,10 @@ export default function RaceResultSection({ raceId, refreshKey = null }) {
 
     fetchRaceResult(raceId)
       .then((res) => {
-        if (!cancelled) setData(res.result ?? null);
+        if (!cancelled) {
+          setData(res.result ?? null);
+          setResultMeta(res.meta ?? meta ?? null);
+        }
       })
       .catch((err) => {
         if (!cancelled) setError(err.message || '結果の取得に失敗しました');
@@ -29,12 +44,19 @@ export default function RaceResultSection({ raceId, refreshKey = null }) {
     return () => {
       cancelled = true;
     };
-  }, [raceId, refreshKey]);
+  }, [raceId, refreshKey, meta]);
+
+  const displayMeta = resultMeta ?? meta;
+  const showResults = isResultDisplayable(data, displayMeta);
 
   if (loading) {
     return (
       <section className="race-result card">
-        <h2 className="race-result-title">結果 / AI検証</h2>
+        <RaceInfoHeader
+          race={race}
+          meta={meta}
+          sectionTitle="結果 / AI検証"
+        />
         <p className="race-result-muted">読み込み中…</p>
       </section>
     );
@@ -43,21 +65,29 @@ export default function RaceResultSection({ raceId, refreshKey = null }) {
   if (error) {
     return (
       <section className="race-result card">
-        <h2 className="race-result-title">結果 / AI検証</h2>
+        <RaceInfoHeader
+          race={race}
+          meta={meta}
+          sectionTitle="結果 / AI検証"
+        />
         <p className="race-result-empty">{error}</p>
       </section>
     );
   }
 
-  if (!data?.available) {
+  if (!showResults) {
     return (
       <section className="race-result card">
-        <h2 className="race-result-title">結果 / AI検証</h2>
-        <p className="race-result-empty">
-          {data?.message ?? 'レース結果はまだ取得できていません'}
+        <RaceInfoHeader
+          race={race}
+          meta={meta}
+          sectionTitle="結果 / AI検証"
+        />
+        <p className="race-result-empty race-result-pending">
+          {data?.message ?? RESULT_PENDING_MESSAGE}
         </p>
         <p className="race-result-hint">
-          レース確定後、Open API（results）の更新を待つか、しばらくしてから再読み込みしてください。
+          公式着順はレース終了後、Open API（results）に結果が載った時点で表示します。
         </p>
       </section>
     );
@@ -67,9 +97,13 @@ export default function RaceResultSection({ raceId, refreshKey = null }) {
 
   return (
     <section className="race-result card">
-      <h2 className="race-result-title">結果 / AI検証</h2>
+      <RaceInfoHeader
+        race={race}
+        meta={meta}
+        sectionTitle="結果 / AI検証"
+      />
       <p className="race-result-sub">
-        {data.source === 'mock' ? 'モック結果' : '公式着順（Open API）'}
+        公式着順（Open API）
         {data.savedToDb ? ' · DB保存済み' : ' · DB未保存'}
         {data.predictionCapturedAt
           ? ` · 予想基準 ${new Date(data.predictionCapturedAt).toLocaleString('ja-JP', {

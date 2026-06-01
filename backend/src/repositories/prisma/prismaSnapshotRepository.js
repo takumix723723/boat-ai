@@ -1,4 +1,5 @@
 import { getPrisma } from '../../db/client.js';
+import { isRealOfficialResult } from '../../services/results/officialResultPolicy.js';
 import { PrismaRacerRepository } from './prismaRacerRepository.js';
 import { PrismaRaceRepository } from './prismaRaceRepository.js';
 
@@ -103,7 +104,7 @@ export class PrismaSnapshotRepository {
         startTime: race.startTime ?? null,
         lastMinute: race.lastMinute ?? undefined,
         dataSource,
-        officialResult: race.officialResult?.available
+        officialResult: isRealOfficialResult(race.officialResult)
           ? race.officialResult
           : undefined,
         meta: {

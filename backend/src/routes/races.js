@@ -50,8 +50,10 @@ router.get('/:id/result', loadMiddleware, async (req, res, next) => {
     if (!memoryRace) {
       return res.status(404).json({ error: 'Race not found' });
     }
-    const result = await getRaceResult(req.params.id, memoryRace);
-    res.json({ result });
+    const result = await getRaceResult(req.params.id, memoryRace, {
+      dataSource: getDatasetMeta()?.dataSource ?? null,
+    });
+    res.json({ result, meta: getDatasetMeta() });
   } catch (err) {
     next(err);
   }

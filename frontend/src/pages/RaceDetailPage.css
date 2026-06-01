@@ -1,25 +1,9 @@
-.race-hero-top {
+.race-hero-badges {
   display: flex;
   align-items: center;
-  gap: 8px;
   flex-wrap: wrap;
-}
-
-.race-hero-top .favorite-btn {
-  margin-right: 2px;
-}
-
-.race-hero-top .page-title {
-  margin: 0;
-}
-
-.race-hero-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-top: 8px;
-  font-size: 0.85rem;
-  color: var(--text-muted);
 }
 
 .ai-section {

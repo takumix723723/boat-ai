@@ -1,0 +1,97 @@
+.race-info-header {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.race-info-header--compact {
+  margin-bottom: 8px;
+  padding: 6px 10px;
+}
+
+.race-info-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.race-info-icon {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.race-info-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+}
+
+.race-info-header--compact .race-info-title {
+  font-size: 0.88rem;
+}
+
+.race-info-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 4px;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.race-info-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.race-info-chip-icon {
+  font-size: 0.62rem;
+}
+
+.race-info-section {
+  margin: 6px 0 0;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.04em;
+}
+
+/* 一覧用インライン */
+
+.race-list-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.race-list-label-date {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.race-list-label-main {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.race-list-label-main .venue {
+  font-size: 0.95rem;
+}
+
+.race-list-label-deadline {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.45);
+}

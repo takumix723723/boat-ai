@@ -10,6 +10,8 @@ import { useLiveRefresh, LIVE_POLL_INTERVAL_MS } from '../hooks/useLiveRefresh';
 import { usePreferences } from '../hooks/usePreferences';
 import { partitionRacesByFavoriteVenues } from '../utils/sortRaces';
 import { sortByDeadline, getUrgency, parseClosedAt } from '../utils/raceTime';
+import { buildRaceLabel, formatDisplayDate } from '../utils/raceLabel';
+import '../components/RaceInfoHeader.css';
 import './RaceListPage.css';
 
 function RaceListSection({ title, races, raceDate, showDivider, isFavoriteVenue, onToggleVenue }) {
@@ -29,6 +31,7 @@ function RaceListSection({ title, races, raceDate, showDivider, isFavoriteVenue,
           );
           const urgency = getUrgency(closedAtMs);
           const venueFav = isFavoriteVenue(race.venueCode);
+          const label = buildRaceLabel(race, { raceDate });
 
           return (
             <li key={race.id}>
@@ -45,8 +48,20 @@ function RaceListSection({ title, races, raceDate, showDivider, isFavoriteVenue,
                       onToggleVenue(race.venueCode, race.venueName)
                     }
                   />
-                  <span className="venue">{race.venueName}</span>
-                  <span className="race-no">{race.raceNo}R</span>
+                  <div className="race-list-label">
+                    {label.date && (
+                      <span className="race-list-label-date">{label.date}</span>
+                    )}
+                    <div className="race-list-label-main">
+                      <span className="venue">{race.venueName}</span>
+                      <span className="race-no">{race.raceNo}R</span>
+                      {label.startTime && label.startTime !== '—' && (
+                        <span className="race-list-label-deadline">
+                          締切 {label.startTime}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                   <span
                     className={`badge ${race.grade?.includes('G') ? 'grade-g1' : 'grade-normal'}`}
                   >
@@ -148,6 +163,9 @@ export default function RaceListPage() {
   return (
     <div className="page">
       <h1 className="page-title">本日のレース</h1>
+      {raceDate && (
+        <p className="page-race-date">開催日 {formatDisplayDate(raceDate)}</p>
+      )}
       <p className="page-sub">
         締切が近い順 · ⭐お気に入りの場を優先 ·{' '}
         {LIVE_POLL_INTERVAL_MS / 1000}秒更新

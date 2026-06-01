@@ -1,4 +1,5 @@
 import { getPrisma } from '../../db/client.js';
+import { isRealOfficialResult } from '../../services/results/officialResultPolicy.js';
 
 /**
  * @param {string} externalId e.g. 20260601-03-11
@@ -36,7 +37,7 @@ export class PrismaRaceRepository {
       ? new Date(`${race.meta.raceDate}T00:00:00.000Z`)
       : parseRaceDateFromExternalId(race.id);
 
-    const officialResult = race.officialResult?.available
+    const officialResult = isRealOfficialResult(race.officialResult)
       ? race.officialResult
       : undefined;
 

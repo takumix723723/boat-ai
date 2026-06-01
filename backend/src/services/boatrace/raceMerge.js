@@ -2,23 +2,17 @@
  * Live更新時: 前回スナップショットとマージし previousAiScore を引き継ぐ
  */
 
+import { isRealOfficialResult, PENDING_OFFICIAL_RESULT } from '../results/officialResultPolicy.js';
+
 function lastMinuteSignature(lm) {
   if (!lm) return '';
   return [lm.weather, lm.wind, lm.wave, lm.remark].join('|');
 }
 
 function pickOfficialResult(oldRace, newRace) {
-  if (newRace?.officialResult?.available) return newRace.officialResult;
-  if (oldRace?.officialResult?.available) return oldRace.officialResult;
-  return (
-    newRace?.officialResult ??
-    oldRace?.officialResult ?? {
-      available: false,
-      reason: 'pending',
-      message: 'レース結果はまだ取得できていません',
-      placements: [],
-    }
-  );
+  if (isRealOfficialResult(newRace?.officialResult)) return newRace.officialResult;
+  if (isRealOfficialResult(oldRace?.officialResult)) return oldRace.officialResult;
+  return { ...PENDING_OFFICIAL_RESULT };
 }
 
 /**
