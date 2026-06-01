@@ -1,0 +1,179 @@
+.prediction {
+  margin-top: 8px;
+}
+
+.prediction-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.prediction-summary {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #e8f4fd;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #0d47a1;
+}
+
+.prediction-muted,
+.prediction-empty,
+.prediction-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.prediction-hint {
+  margin-top: 10px;
+  font-size: 0.72rem;
+}
+
+.prediction-confidence {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f4f6f8;
+}
+
+.prediction-confidence.conf-high {
+  background: #e8f5e9;
+}
+
+.prediction-confidence.conf-low {
+  background: #fff8e1;
+}
+
+.prediction-conf-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-right: 6px;
+}
+
+.prediction-conf-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.prediction-conf-msg {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.prediction-h3 {
+  margin: 12px 0 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.prediction-marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.prediction-mark-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--border, #e0e0e0);
+  font-size: 0.78rem;
+}
+
+.mark-symbol {
+  font-size: 1.1rem;
+  font-weight: 800;
+  min-width: 1.2em;
+  text-align: center;
+}
+
+.mark-symbol.mark-◎ {
+  color: #c62828;
+}
+
+.mark-symbol.mark-○ {
+  color: #1565c0;
+}
+
+.mark-symbol.mark-▲ {
+  color: #2e7d32;
+}
+
+.mark-name {
+  font-weight: 600;
+}
+
+.mark-ai {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.prediction-main-pick {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border: 1px solid #ffcc80;
+}
+
+.pick-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #e65100;
+  text-transform: uppercase;
+}
+
+.pick-combo {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.pick-odds {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #5d4037;
+}
+
+.prediction-picks-table-wrap {
+  overflow-x: auto;
+}
+
+.prediction-picks-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.prediction-picks-table th,
+.prediction-picks-table td {
+  padding: 8px 6px;
+  text-align: left;
+  border-bottom: 1px solid var(--border, #eee);
+}
+
+.prediction-picks-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.pick-row-main {
+  background: #fff8e1;
+}
+
+.pick-combo-cell {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

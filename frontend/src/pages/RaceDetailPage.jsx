@@ -16,6 +16,7 @@ import { usePreferences } from '../hooks/usePreferences';
 import FavoriteButton from '../components/FavoriteButton';
 import AiHistorySection from '../components/AiHistorySection';
 import RaceResultSection from '../components/RaceResultSection';
+import PredictionSection from '../components/PredictionSection';
 import RacerIntelligenceModal from '../components/RacerIntelligenceModal';
 import './RaceDetailPage.css';
 
@@ -139,6 +140,8 @@ export default function RaceDetailPage() {
       <ExhibitionPanel entries={race.entries} />
 
       <EntryTable entries={race.entries} />
+
+      <PredictionSection raceId={id} refreshKey={lastUpdated} />
 
       <RaceResultSection raceId={id} refreshKey={lastUpdated} />
 

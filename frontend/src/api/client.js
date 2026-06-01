@@ -30,6 +30,12 @@ export function fetchRaceResult(id, date = 'today') {
   );
 }
 
+export function fetchRacePrediction(id, date = 'today') {
+  return request(
+    `/api/races/${encodeURIComponent(id)}/prediction?date=${encodeURIComponent(date)}`
+  );
+}
+
 export function fetchAccuracyAnalytics() {
   return request('/api/analytics/accuracy');
 }

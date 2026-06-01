@@ -10,6 +10,7 @@ import {
 } from '../data/raceRepository.js';
 import { getRaceHistory } from '../services/persistence/raceHistoryService.js';
 import { getRaceResult } from '../services/results/raceResultService.js';
+import { buildRacePrediction } from '../services/prediction/racePredictionService.js';
 
 const router = Router();
 
@@ -54,6 +55,18 @@ router.get('/:id/result', loadMiddleware, async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+/** GET /api/races/:id/prediction - AI買い目・印・推定オッズ */
+router.get('/:id/prediction', loadMiddleware, (req, res) => {
+  const race = getRaceById(req.params.id);
+  if (!race) {
+    return res.status(404).json({ error: 'Race not found' });
+  }
+  res.json({
+    meta: getDatasetMeta(),
+    prediction: buildRacePrediction(race),
+  });
 });
 
 /** GET /api/races/:id/history - DBスナップショットのAI推移 */
