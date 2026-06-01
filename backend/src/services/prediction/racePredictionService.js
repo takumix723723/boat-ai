@@ -17,10 +17,6 @@ function labelFromTier(tier) {
   return 'LOW CONFIDENCE';
 }
 
-/**
- * AI点数から各艇の相対強さ（0〜1）
- * @param {object[]} ranked
- */
 function laneWeights(ranked) {
   const scores = ranked.map((e) => e.aiScore?.total ?? 50);
   const max = Math.max(...scores);
@@ -33,9 +29,6 @@ function laneWeights(ranked) {
   return map;
 }
 
-/**
- * @param {object[]} ranked
- */
 function computeRaceSignals(ranked) {
   const top1 = ranked[0].aiScore?.total ?? 0;
   const top2 = ranked[1]?.aiScore?.total ?? 0;
@@ -44,8 +37,8 @@ function computeRaceSignals(ranked) {
 
   const gap12 = top1 - top2;
   const gap23 = top2 - top3;
+  const gap13 = top1 - top3;
   const spread = top1 - bottom;
-
   const contention = clamp(1 - (gap12 / 14 + gap23 / 10) / 2, 0, 1);
 
   const lane1Idx = ranked.findIndex((e) => e.lane === 1);
@@ -53,34 +46,32 @@ function computeRaceSignals(ranked) {
 
   const top3Entries = ranked.slice(0, 3);
   const motorScores = top3Entries.map((e) => motorFactorScore(e.motor));
-  const stScores = top3Entries.map((e) => {
-    const st = e.st;
-    if (st == null) return 50;
-    return clamp(100 - st * 200, 0, 100);
-  });
+  const stSpread =
+    Math.max(
+      ...top3Entries.map((e) => (e.st != null ? clamp(100 - e.st * 200, 0, 100) : 50))
+    ) -
+    Math.min(
+      ...top3Entries.map((e) => (e.st != null ? clamp(100 - e.st * 200, 0, 100) : 50))
+    );
   const motorSpread =
     Math.max(...motorScores) - Math.min(...motorScores);
-  const stSpread = Math.max(...stScores) - Math.min(...stScores);
   const motorStEdge = (motorSpread + stSpread) / 2;
-
   const top1Weight = laneWeights(ranked).get(ranked[0].lane) ?? 0;
 
   return {
     gap12,
     gap23,
+    gap13,
     spread,
     contention,
     lane1Lead,
     motorStEdge,
     top1Weight,
     topLane: ranked[0].lane,
+    top3Within5: gap13 <= 5,
   };
 }
 
-/**
- * @param {object} signals
- * @param {'honmei'|'formation'|'box'|'ana'} kind
- */
 function confidenceForKind(signals, kind) {
   const { gap12, gap23, spread, contention, lane1Lead, motorStEdge, top1Weight } =
     signals;
@@ -97,7 +88,6 @@ function confidenceForKind(signals, kind) {
         Math.min(8, motorStEdge * 0.25);
       base -= contention * 22;
       return clamp(Math.round(base), 28, 95);
-
     case 'formation':
       base =
         32 +
@@ -108,7 +98,6 @@ function confidenceForKind(signals, kind) {
       base -= contention * 12;
       base += Math.min(8, gap23 * 0.5);
       return clamp(Math.round(base), 35, 88);
-
     case 'box':
       base =
         34 +
@@ -118,7 +107,6 @@ function confidenceForKind(signals, kind) {
       base -= Math.min(24, gap12 * 1.4);
       base -= Math.min(8, spread * 0.15);
       return clamp(Math.round(base), 30, 82);
-
     case 'ana':
       base =
         18 +
@@ -128,16 +116,11 @@ function confidenceForKind(signals, kind) {
       base -= lane1Lead * 8;
       base -= Math.min(10, top1Weight * 60);
       return clamp(Math.round(base), 12, 48);
-
     default:
       return 50;
   }
 }
 
-/**
- * @param {number[]} lanes [1着,2着,3着]
- * @param {Map<number, number>} weights
- */
 function comboProbability(lanes, weights) {
   const [a, b, c] = lanes;
   const wa = weights.get(a) ?? 0;
@@ -156,32 +139,167 @@ function probToEstimatedOdds(prob) {
   return Math.round(Math.min(999.9, Math.max(3.0, raw)) * 10) / 10;
 }
 
-function buildFormationLine(ranked) {
+function buildFormationParts(ranked) {
   const head = ranked[0].lane;
-  const second = [ranked[1].lane, ranked[2].lane].join(',');
-  const thirdSet = new Set(ranked.slice(1, Math.min(5, ranked.length)).map((e) => e.lane));
-  const third = [...thirdSet].sort((a, b) => a - b).join(',');
-  return `${head}→${second}→${third}`;
+  const secondLanes = [ranked[1].lane, ranked[2].lane];
+  const thirdSet = new Set(
+    ranked.slice(1, Math.min(5, ranked.length)).map((e) => e.lane)
+  );
+  const thirdLanes = [...thirdSet].sort((a, b) => a - b);
+  let points = 0;
+  for (const s of secondLanes) {
+    for (const t of thirdLanes) {
+      if (head !== s && head !== t && s !== t) points += 1;
+    }
+  }
+  return {
+    display: `${head}→${secondLanes.join(',')}→${thirdLanes.join(',')}`,
+    points,
+    head,
+    secondLanes,
+    thirdLanes,
+  };
 }
 
-function buildBoxLine(ranked) {
-  const idxB = Math.min(1, ranked.length - 1);
-  const idxC = Math.min(2, ranked.length - 1);
-  const idxD = Math.min(4, ranked.length - 1);
-  const lanes = [ranked[idxB], ranked[idxC], ranked[idxD]]
-    .map((e) => e.lane)
+function buildBoxParts(ranked) {
+  const lanes = [
+    ranked[1]?.lane,
+    ranked[2]?.lane,
+    ranked[Math.min(4, ranked.length - 1)]?.lane,
+  ]
+    .filter((l) => l != null)
     .sort((a, b) => a - b);
   const unique = [...new Set(lanes)];
-  return `${unique.join('-')} BOX`;
+  const n = unique.length;
+  const points = n >= 3 ? 6 : n === 2 ? 2 : 1;
+  return {
+    display: unique.join('-'),
+    points,
+    lanes: unique,
+  };
 }
 
-/**
- * @param {object[]} ranked
- * @param {object[]} combos
- */
-function buildBettingRecommendations(ranked, combos, signals) {
-  const topCombos = combos.slice(0, 2).map((c) => c.combo);
-  const honmeiPct = confidenceForKind(signals, 'honmei');
+function buildBettingGuide(ranked, combos, signals) {
+  const honmeiConfidencePercent = confidenceForKind(signals, 'honmei');
+  const main = combos[0];
+  const sub = combos[1];
+  const formation = buildFormationParts(ranked);
+  const box = buildBoxParts(ranked);
+  const safeCombos = combos.slice(0, 2).map((c) => ({
+    combo: c.combo,
+    odds: c.odds,
+  }));
+
+  const motorSorted = [...ranked]
+    .filter((e) => e.motor?.rate2nd != null)
+    .sort((a, b) => (b.motor?.rate2nd ?? 0) - (a.motor?.rate2nd ?? 0));
+  const motorTop = motorSorted[0];
+
+  const gap12r = Math.round(signals.gap12 * 10) / 10;
+  const gap13r = Math.round(signals.gap13 * 10) / 10;
+
+  let safeReason = `AI上位2パターン（1-2位差${gap12r}pt）を抑えて購入`;
+  let boxReason = `上位${box.lanes.join('-')}艇が拮抗（AI差${gap13r}pt以内）— 6点BOXで分散`;
+  let formReason = `${formation.head}号艇軸。2・3着を${formation.secondLanes.join('/')}→${formation.thirdLanes.join('/')}で押さえる`;
+
+  if (signals.gap12 >= 10) {
+    safeReason = `AI1位${ranked[0].lane}号が${gap12r}ptリード — 本命2点に寄せる`;
+    boxReason = `念のため上位艇BOX（${box.lanes.join('-')}）で保険`;
+  }
+  if (motorTop) {
+    formReason += ` · モーター2連率${motorTop.lane}号${motorTop.motor.rate2nd}%`;
+  }
+
+  return {
+    honmeiConfidencePercent,
+    honmei: {
+      combo: main?.combo ?? '—',
+      odds: main?.odds ?? null,
+      alternates: sub
+        ? [{ combo: sub.combo, odds: sub.odds }]
+        : [],
+    },
+    howToBet: {
+      safe: {
+        label: '安全',
+        combos: safeCombos.map((c) => c.combo),
+        odds: safeCombos.map((c) => c.odds),
+        points: safeCombos.length,
+        reason: safeReason,
+      },
+      box: {
+        label: 'BOX',
+        combo: box.display,
+        points: box.points,
+        reason: boxReason,
+      },
+      formation: {
+        label: 'フォーメーション',
+        display: formation.display,
+        points: formation.points,
+        reason: formReason,
+      },
+    },
+  };
+}
+
+function buildAiComment(ranked, signals, guide) {
+  const gap12 = Math.round(signals.gap12 * 10) / 10;
+  const gap13 = Math.round(signals.gap13 * 10) / 10;
+
+  let headline;
+  if (signals.gap12 <= 5) {
+    headline = `混戦（AI差${gap12}pt以内）`;
+  } else if (signals.gap12 >= 12) {
+    headline = `順当（AI1位が${gap12}ptリード）`;
+  } else {
+    headline = `やや混戦（1-2位差${gap12}pt）`;
+  }
+
+  const top = ranked[0];
+  const second = ranked[1];
+  const courseNote =
+    top.lane === 1
+      ? `イン${top.lane}号艇がAI首位（${top.aiScore.total}点）`
+      : `${top.lane}号艇がAI首位（${top.aiScore.total}点）· インは${ranked.find((e) => e.lane === 1)?.aiScore?.total ?? '—'}点`;
+
+  const motorTop = [...ranked]
+    .filter((e) => e.motor?.rate2nd != null)
+    .sort((a, b) => (b.motor?.rate2nd ?? 0) - (a.motor?.rate2nd ?? 0))[0];
+
+  const summary = `${courseNote}。2位${second.lane}号（${second.aiScore.total}点）との差${gap12}pt / 上位3艇差${gap13}pt。${
+    motorTop
+      ? `モーター2連率は${motorTop.lane}号${motorTop.motor.rate2nd}%。`
+      : ''
+  }`;
+
+  const recommended = [
+    {
+      type: 'BOX',
+      text: `${guide.howToBet.box.combo}（${guide.howToBet.box.points}点）`,
+    },
+    {
+      type: 'フォーメーション',
+      text: guide.howToBet.formation.display,
+    },
+  ];
+
+  const actionHint = signals.top3Within5
+    ? 'おすすめ: BOXで6点 · フォーメーションで4点前後'
+    : `おすすめ: 安全買い ${guide.howToBet.safe.combos.join(' / ')} を軸に`;
+
+  return {
+    headline,
+    summary,
+    actionHint,
+    recommended,
+    gap12,
+    gap13,
+  };
+}
+
+function buildBettingRecommendations(ranked, combos, signals, guide) {
+  const honmeiPct = guide.honmeiConfidencePercent;
   const formationPct = confidenceForKind(signals, 'formation');
   const boxPct = confidenceForKind(signals, 'box');
   const anaPct = confidenceForKind(signals, 'ana');
@@ -191,10 +309,7 @@ function buildBettingRecommendations(ranked, combos, signals) {
     combos.find((c) => !top3Lanes.has(c.lanes[0])) ??
     combos[combos.length - 1];
 
-  const honmeiTier = tierFromPercent(honmeiPct);
-  const formationTier = tierFromPercent(formationPct);
-  const boxTier = tierFromPercent(boxPct);
-  const anaTier = tierFromPercent(anaPct);
+  const main = guide.honmei;
 
   return [
     {
@@ -202,40 +317,48 @@ function buildBettingRecommendations(ranked, combos, signals) {
       emoji: '🔥',
       title: '本命',
       confidencePercent: honmeiPct,
-      confidenceTier: honmeiTier,
-      confidenceLabel: labelFromTier(honmeiTier),
-      lines: topCombos.length ? topCombos : [combos[0]?.combo].filter(Boolean),
+      confidenceTier: tierFromPercent(honmeiPct),
+      confidenceLabel: labelFromTier(tierFromPercent(honmeiPct)),
+      primary: {
+        combo: main.combo,
+        odds: main.odds,
+        confidencePercent: honmeiPct,
+      },
+      lines: [
+        main.combo,
+        ...main.alternates.map((a) => a.combo),
+      ].filter(Boolean),
+      alternates: main.alternates,
     },
     {
       id: 'formation',
       emoji: '📊',
       title: 'フォーメーション',
       confidencePercent: formationPct,
-      confidenceTier: formationTier,
-      confidenceLabel: labelFromTier(formationTier),
-      lines: [buildFormationLine(ranked)],
+      confidenceTier: tierFromPercent(formationPct),
+      confidenceLabel: labelFromTier(tierFromPercent(formationPct)),
+      lines: [guide.howToBet.formation.display],
+      points: guide.howToBet.formation.points,
     },
     {
       id: 'box',
       emoji: '🎲',
       title: 'BOX',
       confidencePercent: boxPct,
-      confidenceTier: boxTier,
-      confidenceLabel: labelFromTier(boxTier),
-      lines: [buildBoxLine(ranked)],
-      note:
-        signals.contention >= 0.55
-          ? '上位が接近 — BOX分散を推奨'
-          : null,
+      confidenceTier: tierFromPercent(boxPct),
+      confidenceLabel: labelFromTier(tierFromPercent(boxPct)),
+      lines: [`${guide.howToBet.box.combo} BOX`],
+      points: guide.howToBet.box.points,
     },
     {
       id: 'ana',
       emoji: '💥',
       title: '穴',
       confidencePercent: anaPct,
-      confidenceTier: anaTier,
-      confidenceLabel: labelFromTier(anaTier),
+      confidenceTier: tierFromPercent(anaPct),
+      confidenceLabel: labelFromTier(tierFromPercent(anaPct)),
       lines: upsetCombo ? [upsetCombo.combo] : [],
+      odds: upsetCombo?.odds ?? null,
     },
   ];
 }
@@ -294,22 +417,15 @@ export function buildRacePrediction(race) {
     label: idx === 0 ? '本命' : idx <= 2 ? '対抗' : '穴',
   }));
 
-  const recommendations = buildBettingRecommendations(ranked, combos, signals);
-  const honmeiRec = recommendations.find((r) => r.id === 'honmei');
-  const confidencePercent = honmeiRec?.confidencePercent ?? 50;
-
-  let level = 'medium';
-  let message = 'AI点数差は中程度。複数パターンを検討してください。';
-  if (confidencePercent >= 80) {
-    level = 'high';
-    message = `AI1位（${ranked[0].lane}号艇）が他艇より明確に高評価。本命信頼度は高めです。`;
-  } else if (confidencePercent < 60) {
-    level = 'low';
-    message =
-      signals.contention >= 0.55
-        ? '上位が接近した混戦模様。BOX・フォーメーション中心が無難です。'
-        : '上位艇の点数が拮抗しています。買い目は分散推奨です。';
-  }
+  const bettingGuide = buildBettingGuide(ranked, combos, signals);
+  const aiComment = buildAiComment(ranked, signals, bettingGuide);
+  const recommendations = buildBettingRecommendations(
+    ranked,
+    combos,
+    signals,
+    bettingGuide
+  );
+  const honmeiPct = bettingGuide.honmeiConfidencePercent;
 
   const marks = ranked.map((e, idx) => ({
     lane: e.lane,
@@ -321,9 +437,6 @@ export function buildRacePrediction(race) {
   }));
 
   const main = picks[0];
-  const summary = main
-    ? `本命3連単 ${main.combo}（推定${main.odds}倍）· 自信度 ${honmeiRec?.confidencePercent}%`
-    : null;
 
   return {
     available: true,
@@ -334,16 +447,21 @@ export function buildRacePrediction(race) {
     oddsNote:
       'オッズはAI点数から算出した推定値です。公式オッズではありません。',
     confidence: {
-      level,
-      percent: confidencePercent,
-      message,
-      tier: tierFromPercent(confidencePercent),
-      label: labelFromTier(tierFromPercent(confidencePercent)),
+      level:
+        honmeiPct >= 80 ? 'high' : honmeiPct < 60 ? 'low' : 'medium',
+      percent: honmeiPct,
+      message: aiComment.headline,
+      tier: tierFromPercent(honmeiPct),
+      label: labelFromTier(tierFromPercent(honmeiPct)),
     },
+    aiComment,
+    bettingGuide,
     signals: {
       gap12: Math.round(signals.gap12 * 10) / 10,
+      gap13: Math.round(signals.gap13 * 10) / 10,
       contention: Math.round(signals.contention * 100) / 100,
       lane1Lead: Math.round(signals.lane1Lead * 100) / 100,
+      top3Within5: signals.top3Within5,
     },
     marks,
     recommendations,
@@ -352,6 +470,8 @@ export function buildRacePrediction(race) {
       main: main ?? null,
       picks,
     },
-    summary,
+    summary: main
+      ? `本命 ${main.combo} · 自信度${honmeiPct}% · 推定${main.odds}倍`
+      : null,
   };
 }

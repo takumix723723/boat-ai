@@ -18,9 +18,11 @@ const DISMISS_KEY = 'boat-ai-pwa-install-dismissed';
 
 /**
  * ホーム画面に追加の案内（Push 未実装）
+ * @param {{ hiddenOnScroll?: boolean }} props
  */
-export default function PwaInstallBanner() {
+export default function PwaInstallBanner({ hiddenOnScroll = true }) {
   const [visible, setVisible] = useState(false);
+  const [scrollHidden, setScrollHidden] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [mode, setMode] = useState('ios'); // ios | android
 
@@ -45,6 +47,17 @@ export default function PwaInstallBanner() {
     return () => window.removeEventListener('beforeinstallprompt', onBeforeInstall);
   }, []);
 
+  useEffect(() => {
+    if (!hiddenOnScroll || !visible) return undefined;
+
+    const onScroll = () => {
+      setScrollHidden(window.scrollY > 48);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [hiddenOnScroll, visible]);
+
   const dismiss = () => {
     localStorage.setItem(DISMISS_KEY, '1');
     setVisible(false);
@@ -58,10 +71,14 @@ export default function PwaInstallBanner() {
     dismiss();
   };
 
-  if (!visible) return null;
+  if (!visible || scrollHidden) return null;
 
   return (
-    <div className="pwa-install-banner" role="region" aria-label="アプリのインストール案内">
+    <div
+      className="pwa-install-banner"
+      role="region"
+      aria-label="アプリのインストール案内"
+    >
       <div className="pwa-install-inner">
         <p className="pwa-install-title">アプリとして使う</p>
         {mode === 'ios' ? (

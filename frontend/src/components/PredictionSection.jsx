@@ -7,42 +7,125 @@ import {
 } from '../api/client';
 import './PredictionSection.css';
 
-function ConfidenceMeter({ percent, tier, label }) {
+function HonmeiCard({ honmei, guide }) {
+  const primary = honmei?.primary ?? guide?.honmei;
+  if (!primary?.combo) return null;
+
   return (
-    <div className={`pred-conf-meter pred-conf-meter--${tier}`}>
-      <span className="pred-conf-pct">{percent}%</span>
-      <span className="pred-conf-tag">{label}</span>
-    </div>
+    <article className="pred-honmei-card">
+      <div className="pred-honmei-label">🔥 本命</div>
+      <div className="pred-honmei-combo">{primary.combo}</div>
+      <div className="pred-honmei-meta">
+        <div className="pred-honmei-stat">
+          <span className="pred-honmei-stat-label">本命自信度</span>
+          <span className="pred-honmei-stat-value">
+            {primary.confidencePercent ?? guide?.honmeiConfidencePercent}%
+          </span>
+        </div>
+        {primary.odds != null && (
+          <div className="pred-honmei-stat">
+            <span className="pred-honmei-stat-label">推定</span>
+            <span className="pred-honmei-stat-value pred-honmei-odds">
+              {primary.odds}倍
+            </span>
+          </div>
+        )}
+      </div>
+      {honmei?.alternates?.length > 0 && (
+        <p className="pred-honmei-alt">
+          次点: {honmei.alternates.map((a) => a.combo).join(' · ')}
+        </p>
+      )}
+    </article>
   );
 }
 
-function BetRecommendationCard({ rec }) {
-  if (!rec) return null;
+function BettingGuideCard({ guide, aiComment }) {
+  if (!guide?.howToBet) return null;
+  const { safe, box, formation } = guide.howToBet;
+
   return (
-    <article className={`pred-rec pred-rec--${rec.id}`}>
-      <header className="pred-rec-head">
-        <h3 className="pred-rec-title">
-          <span className="pred-rec-emoji" aria-hidden>
-            {rec.emoji}
-          </span>
-          {rec.title}
-        </h3>
-        <ConfidenceMeter
-          percent={rec.confidencePercent}
-          tier={rec.confidenceTier}
-          label={rec.confidenceLabel}
-        />
-      </header>
-      <p className="pred-rec-conf-caption">自信度 {rec.confidencePercent}%</p>
-      <ul className="pred-rec-lines">
-        {rec.lines?.map((line) => (
-          <li key={line} className="pred-rec-line">
-            {line}
-          </li>
-        ))}
-      </ul>
-      {rec.note && <p className="pred-rec-note">{rec.note}</p>}
+    <article className="pred-guide-card">
+      <div className="pred-guide-head">
+        <span className="pred-guide-head-label">本命自信度</span>
+        <span className="pred-guide-head-pct">
+          {guide.honmeiConfidencePercent}%
+        </span>
+      </div>
+
+      {aiComment && (
+        <div className="pred-ai-comment">
+          <p className="pred-ai-comment-headline">{aiComment.headline}</p>
+          <p className="pred-ai-comment-summary">{aiComment.summary}</p>
+          <p className="pred-ai-comment-action">{aiComment.actionHint}</p>
+          {aiComment.recommended?.length > 0 && (
+            <ul className="pred-ai-comment-recs">
+              {aiComment.recommended.map((r) => (
+                <li key={`${r.type}-${r.text}`}>
+                  <strong>{r.type}</strong> {r.text}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      <h3 className="pred-guide-title">おすすめ買い方</h3>
+
+      <div className="pred-bet-row">
+        <span className="pred-bet-type">安全</span>
+        <div className="pred-bet-body">
+          <p className="pred-bet-combos">{safe.combos.join(' / ')}</p>
+          <p className="pred-bet-points">{safe.points}点</p>
+          <p className="pred-bet-reason">{safe.reason}</p>
+        </div>
+      </div>
+
+      <div className="pred-bet-row">
+        <span className="pred-bet-type">BOX</span>
+        <div className="pred-bet-body">
+          <p className="pred-bet-combos">
+            {box.combo}（{box.points}点）
+          </p>
+          <p className="pred-bet-reason">{box.reason}</p>
+        </div>
+      </div>
+
+      <div className="pred-bet-row">
+        <span className="pred-bet-type">フォーメーション</span>
+        <div className="pred-bet-body">
+          <p className="pred-bet-combos">{formation.display}</p>
+          <p className="pred-bet-points">{formation.points}点</p>
+          <p className="pred-bet-reason">{formation.reason}</p>
+        </div>
+      </div>
     </article>
+  );
+}
+
+function SubRecommendationCards({ recommendations }) {
+  const subs = recommendations?.filter((r) => r.id !== 'honmei') ?? [];
+  if (!subs.length) return null;
+
+  return (
+    <div className="pred-sub-recs">
+      {subs.map((rec) => (
+        <article key={rec.id} className={`pred-sub-rec pred-sub-rec--${rec.id}`}>
+          <div className="pred-sub-rec-head">
+            <span>
+              {rec.emoji} {rec.title}
+            </span>
+            <span className="pred-sub-rec-pct">{rec.confidencePercent}%</span>
+          </div>
+          {rec.lines?.map((line) => (
+            <p key={line} className="pred-sub-rec-line">
+              {line}
+              {rec.points != null ? `（${rec.points}点）` : ''}
+            </p>
+          ))}
+        </article>
+      ))}
+    </div>
   );
 }
 
@@ -133,26 +216,14 @@ export default function PredictionSection({ raceId, refreshKey = null }) {
             )}
             <div>
               <dt>API base</dt>
-              <dd className="prediction-error-url">
-                {apiDebug.base || '(same-origin / vite proxy)'}
-              </dd>
-            </div>
-            <div>
-              <dt>VITE_API_URL</dt>
-              <dd>{apiDebug.viteEnv}</dd>
-            </div>
-            <div>
-              <dt>Resolved via</dt>
-              <dd>{apiDebug.source}</dd>
+              <dd>{apiDebug.base || '(proxy)'}</dd>
             </div>
           </dl>
         )}
         <p className="prediction-hint">
           {hitStaticSite
-            ? 'リクエストが boat-ai-web（静的サイト）に向いています。Render の boat-ai-web に VITE_API_URL=https://boat-ai-api.onrender.com を設定し、Static を再ビルドしてください。'
-            : isRouteMissing
-              ? 'API に prediction ルートがありません。boat-ai-api を最新 commit で再デプロイし、/api/health の apiFeatures.racePrediction を確認してください。'
-              : 'Network タブで上記 URL が boat-ai-api 向きで 200 になるか確認してください。'}
+            ? 'VITE_API_URL を boat-ai-api に向けて Static を再ビルドしてください。'
+            : 'Network タブで prediction URL を確認してください。'}
         </p>
       </section>
     );
@@ -169,21 +240,17 @@ export default function PredictionSection({ raceId, refreshKey = null }) {
     );
   }
 
-  const { confidence, marks, recommendations, oddsNote } = prediction;
+  const { marks, recommendations, oddsNote, bettingGuide, aiComment } =
+    prediction;
+  const honmeiRec = recommendations?.find((r) => r.id === 'honmei');
 
   return (
     <section className="prediction card">
       <h2 className="prediction-title">AI買い目提案</h2>
 
-      {confidence?.message && (
-        <p className="prediction-summary">{confidence.message}</p>
-      )}
-
-      <div className="pred-rec-list">
-        {recommendations?.map((rec) => (
-          <BetRecommendationCard key={rec.id} rec={rec} />
-        ))}
-      </div>
+      <HonmeiCard honmei={honmeiRec} guide={bettingGuide} />
+      <BettingGuideCard guide={bettingGuide} aiComment={aiComment} />
+      <SubRecommendationCards recommendations={recommendations} />
 
       <h3 className="prediction-h3">印（AI順位）</h3>
       <div className="prediction-marks">

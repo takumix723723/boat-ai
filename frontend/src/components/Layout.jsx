@@ -8,6 +8,8 @@ const ROOT_PATHS = ['/', '/watch', '/ranking', '/analytics'];
 export default function Layout({ children }) {
   const { pathname } = useLocation();
   const isRoot = ROOT_PATHS.includes(pathname);
+  const showInstallBanner =
+    isRoot && !pathname.startsWith('/race/');
 
   return (
     <div className="app-shell">
@@ -25,7 +27,7 @@ export default function Layout({ children }) {
           </Link>
         )}
       </header>
-      <PwaInstallBanner />
+      {showInstallBanner && <PwaInstallBanner hiddenOnScroll />}
       <main className="app-main">{children}</main>
       <BottomNav />
     </div>
