@@ -141,11 +141,11 @@ export default function RaceDetailPage() {
 
       <EntryTable entries={race.entries} />
 
-      <PredictionSection raceId={id} refreshKey={lastUpdated} />
+      <PredictionSection raceId={race.id} refreshKey={lastUpdated} />
 
-      <RaceResultSection raceId={id} refreshKey={lastUpdated} />
+      <RaceResultSection raceId={race.id} refreshKey={lastUpdated} />
 
-      <AiHistorySection raceId={id} refreshKey={lastUpdated} />
+      <AiHistorySection raceId={race.id} refreshKey={lastUpdated} />
 
       <section className="ai-section">
         <h2 className="ai-section-title">AI総合評価</h2>

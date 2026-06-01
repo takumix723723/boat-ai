@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { ApiError, fetchRacePrediction, formatApiError } from '../api/client';
+import {
+  ApiError,
+  fetchRacePrediction,
+  formatApiError,
+  getApiBaseDebug,
+} from '../api/client';
 import './PredictionSection.css';
 
 function ConfidenceMeter({ percent, tier, label }) {
@@ -56,6 +61,12 @@ export default function PredictionSection({ raceId, refreshKey = null }) {
     setError(null);
     setErrorDetail(null);
 
+    if (!raceId) {
+      setError('Prediction API error: raceId is missing');
+      setLoading(false);
+      return undefined;
+    }
+
     fetchRacePrediction(raceId)
       .then((res) => {
         if (!cancelled) setPrediction(res.prediction ?? null);
@@ -93,8 +104,13 @@ export default function PredictionSection({ raceId, refreshKey = null }) {
   }
 
   if (error) {
+    const apiDebug = getApiBaseDebug();
     const isRouteMissing =
       errorDetail?.status === 404 && errorDetail?.body?.error === 'Not found';
+    const hitStaticSite =
+      isRouteMissing &&
+      errorDetail?.url &&
+      !String(errorDetail.url).includes('boat-ai-api');
     return (
       <section className="prediction card">
         <h2 className="prediction-title">AI買い目提案</h2>
@@ -115,12 +131,28 @@ export default function PredictionSection({ raceId, refreshKey = null }) {
                 <dd className="prediction-error-url">{errorDetail.url}</dd>
               </div>
             )}
+            <div>
+              <dt>API base</dt>
+              <dd className="prediction-error-url">
+                {apiDebug.base || '(same-origin / vite proxy)'}
+              </dd>
+            </div>
+            <div>
+              <dt>VITE_API_URL</dt>
+              <dd>{apiDebug.viteEnv}</dd>
+            </div>
+            <div>
+              <dt>Resolved via</dt>
+              <dd>{apiDebug.source}</dd>
+            </div>
           </dl>
         )}
         <p className="prediction-hint">
-          {isRouteMissing
-            ? 'バックエンドに prediction ルートがありません。Render の boat-ai-api を commit 9362572 以降で再デプロイし、/api/health の apiFeatures.racePrediction が true か確認してください。'
-            : 'VITE_API_URL・CORS・Network タブで上記 URL の応答を確認してください。'}
+          {hitStaticSite
+            ? 'リクエストが boat-ai-web（静的サイト）に向いています。Render の boat-ai-web に VITE_API_URL=https://boat-ai-api.onrender.com を設定し、Static を再ビルドしてください。'
+            : isRouteMissing
+              ? 'API に prediction ルートがありません。boat-ai-api を最新 commit で再デプロイし、/api/health の apiFeatures.racePrediction を確認してください。'
+              : 'Network タブで上記 URL が boat-ai-api 向きで 200 になるか確認してください。'}
         </p>
       </section>
     );

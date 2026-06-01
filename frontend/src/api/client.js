@@ -1,4 +1,6 @@
-const BASE = import.meta.env.VITE_API_URL || '';
+import { buildApiUrl, getApiBaseDebug, resolveApiBase } from '../config/apiBase.js';
+
+export { getApiBaseDebug, resolveApiBase };
 
 export class ApiError extends Error {
   /**
@@ -16,7 +18,7 @@ export class ApiError extends Error {
 }
 
 async function request(path, options = {}) {
-  const url = `${BASE}${path}`;
+  const url = buildApiUrl(path);
   let res;
   try {
     res = await fetch(url, {
@@ -60,7 +62,9 @@ export function fetchRaces(date = 'today') {
 }
 
 export function fetchRace(id, date = 'today') {
-  return request(`/api/races/${id}?date=${encodeURIComponent(date)}`);
+  return request(
+    `/api/races/${encodeURIComponent(id)}?date=${encodeURIComponent(date)}`
+  );
 }
 
 export function fetchRaceHistory(id) {
