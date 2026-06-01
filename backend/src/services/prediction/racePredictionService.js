@@ -1,3 +1,5 @@
+import { motorFactorScore } from '../boatrace/motorEvaluation.js';
+
 /** 競艇の印（AI順位から付与） */
 const MARK_BY_RANK = ['◎', '○', '▲', '△', '×', ''];
 
@@ -50,7 +52,7 @@ function computeRaceSignals(ranked) {
   const lane1Lead = lane1Idx === 0 ? 1 : lane1Idx === 1 ? 0.55 : lane1Idx === 2 ? 0.25 : 0;
 
   const top3Entries = ranked.slice(0, 3);
-  const motorScores = top3Entries.map((e) => e.motor?.score ?? e.motor?.rate2nd ?? 50);
+  const motorScores = top3Entries.map((e) => motorFactorScore(e.motor));
   const stScores = top3Entries.map((e) => {
     const st = e.st;
     if (st == null) return 50;

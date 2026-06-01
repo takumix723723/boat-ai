@@ -1,8 +1,10 @@
 /**
  * @typedef {Object} MotorEvaluation
- * @property {number|null} rate2nd   - 2連対率（将来DB連携）
- * @property {number|null} rate3rd   - 3連対率
- * @property {number|null} score     - 0-100 正規化スコア（null=未設定）
+ * @property {number|null} motorNo     - モーター号機（強さではない）
+ * @property {number|null} rate2nd     - モーター2連対率 %
+ * @property {number|null} rate3rd     - モーター3連対率 %
+ * @property {number|null} winRate     - 全国勝率 %（選手）
+ * @property {number|null} localWinRate - 当地勝率 %
  * @property {string} [note]
  */
 

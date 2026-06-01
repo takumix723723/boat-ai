@@ -42,12 +42,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-.motor-score {
-  color: var(--score-high);
+.motor-display {
+  font-size: 0.72rem;
+  line-height: 1.35;
   font-weight: 600;
-}
-
-.motor-rate {
-  color: var(--text-muted);
-  font-size: 0.75rem;
 }

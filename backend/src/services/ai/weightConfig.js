@@ -12,7 +12,7 @@ export const WEIGHT_FACTOR_LABELS = {
   st: 'ST',
   exhibitionTime: '展示',
   lane: '枠',
-  motor: 'モーター',
+  motor: '機材力',
   course: 'コース',
   lastMinute: '直前',
 };

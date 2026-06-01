@@ -1,3 +1,4 @@
+import { formatMotorDisplay } from '../utils/motorDisplay';
 import './EntryTable.css';
 
 export default function EntryTable({ entries }) {
@@ -14,7 +15,7 @@ export default function EntryTable({ entries }) {
               <th>選手</th>
               <th>級</th>
               <th>支部</th>
-              <th>モーター</th>
+              <th>モーター号機</th>
             </tr>
           </thead>
           <tbody>
@@ -27,13 +28,7 @@ export default function EntryTable({ entries }) {
                 <td>{e.rank}</td>
                 <td>{e.branch}</td>
                 <td className="motor-cell">
-                  {e.motor?.score != null ? (
-                    <span className="motor-score">{e.motor.score}</span>
-                  ) : e.motor?.rate2nd != null ? (
-                    <span className="motor-rate">{e.motor.rate2nd}%</span>
-                  ) : (
-                    '—'
-                  )}
+                  <span className="motor-display">{formatMotorDisplay(e.motor)}</span>
                 </td>
               </tr>
             ))}

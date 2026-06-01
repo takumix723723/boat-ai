@@ -1,6 +1,7 @@
 import { buildScoreDelta } from './scoreDelta.js';
 import { getActiveWeightsSync } from './ai/weightProfileService.js';
 import { DEFAULT_WEIGHTS } from './ai/weightConfig.js';
+import { motorFactorScore } from './boatrace/motorEvaluation.js';
 
 /**
  * AI点数（0-100）仮ロジック
@@ -45,14 +46,9 @@ function scoreLane(lane) {
   return base[lane] ?? 50;
 }
 
-/** モーター評価（未設定時は中立50、scoreがあれば採用） */
+/** モーター機材力（2連率・3連率・勝率のみ。号機は使わない） */
 function scoreMotor(motor) {
-  if (!motor) return 50;
-  if (motor.score != null) return clamp(motor.score);
-  if (motor.rate2nd != null) {
-    return clamp(Math.round(motor.rate2nd * 1.2));
-  }
-  return 50;
+  return motorFactorScore(motor);
 }
 
 /** コース有利不利 */

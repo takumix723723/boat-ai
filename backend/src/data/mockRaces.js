@@ -420,10 +420,33 @@ const MOCK_WINNER_LANE = {
   '20260601-toda-13': 1,
 };
 
+/** モック: 旧 score フィールドを号機+2連率形式へ（号機はAIに使わない） */
+function normalizeMockMotor(motor, lane) {
+  if (!motor) return motor;
+  const rate2nd = motor.rate2nd ?? null;
+  const rate3rd = motor.rate3rd ?? null;
+  return {
+    motorNo: motor.motorNo ?? 20 + lane * 7,
+    rate2nd,
+    rate3rd,
+    winRate:
+      motor.winRate ??
+      (rate2nd != null ? Math.round(rate2nd * 0.11 * 10) / 10 : null),
+    localWinRate: motor.localWinRate ?? null,
+    note: motor.note ?? null,
+  };
+}
+
 /** フォールバック用モック（AIスコア未適用の生データ） */
 export function getMockRaces() {
   return rawRaces.map((r) => {
-    const copy = { ...r, entries: r.entries.map((e) => ({ ...e })) };
+    const copy = {
+      ...r,
+      entries: r.entries.map((e) => ({
+        ...e,
+        motor: normalizeMockMotor(e.motor, e.lane),
+      })),
+    };
     if (copy.officialResult?.available) return copy;
     const winnerLane = MOCK_WINNER_LANE[copy.id] ?? 1;
     copy.officialResult = buildMockOfficialResult(copy.entries, winnerLane);

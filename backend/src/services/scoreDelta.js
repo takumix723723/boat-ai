@@ -3,7 +3,7 @@ const FACTOR_LABELS = {
   st: { up: 'ST好転', down: 'ST悪化' },
   exhibitionTime: { up: '展示好転', down: '展示悪化' },
   lastMinute: { up: '直前好転', down: '直前悪化' },
-  motor: { up: 'モーター好転', down: 'モーター悪化' },
+  motor: { up: '機材好転', down: '機材悪化' },
   course: { up: 'コース好転', down: 'コース悪化' },
   lane: { up: '枠順好転', down: '枠順悪化' },
 };

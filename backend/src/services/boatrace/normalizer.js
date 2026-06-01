@@ -6,6 +6,7 @@ import {
   formatWave,
   formatWeather,
 } from './constants.js';
+import { mapMotorFromProgram } from './motorEvaluation.js';
 
 export function raceKey(program) {
   return `${program.race_date}-${program.race_stadium_number}-${program.race_number}`;
@@ -39,17 +40,6 @@ function deriveStatus(preview) {
   if (!preview) return '出走前';
   if (hasExhibitionData(preview)) return '展示済';
   return '直前';
-}
-
-function mapMotorFromProgram(boat) {
-  const rate2nd = boat.racer_assigned_motor_top_2_percent ?? null;
-  const rate3rd = boat.racer_assigned_motor_top_3_percent ?? null;
-  return {
-    rate2nd,
-    rate3rd,
-    score: rate2nd != null ? Math.round(Math.min(100, rate2nd * 1.5)) : null,
-    note: rate2nd == null ? 'モーター率未取得' : null,
-  };
 }
 
 function mapEntry(programBoat, previewBoat) {
