@@ -58,15 +58,19 @@ router.get('/:id/result', loadMiddleware, async (req, res, next) => {
 });
 
 /** GET /api/races/:id/prediction - AI買い目・印・推定オッズ */
-router.get('/:id/prediction', loadMiddleware, (req, res) => {
-  const race = getRaceById(req.params.id);
-  if (!race) {
-    return res.status(404).json({ error: 'Race not found' });
+router.get('/:id/prediction', loadMiddleware, (req, res, next) => {
+  try {
+    const race = getRaceById(req.params.id);
+    if (!race) {
+      return res.status(404).json({ error: 'Race not found' });
+    }
+    res.json({
+      meta: getDatasetMeta(),
+      prediction: buildRacePrediction(race),
+    });
+  } catch (err) {
+    next(err);
   }
-  res.json({
-    meta: getDatasetMeta(),
-    prediction: buildRacePrediction(race),
-  });
 });
 
 /** GET /api/races/:id/history - DBスナップショットのAI推移 */

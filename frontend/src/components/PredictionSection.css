@@ -32,6 +32,41 @@
   font-size: 0.72rem;
 }
 
+.prediction-error-main {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.prediction-error-detail {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fef2f2;
+  font-size: 0.72rem;
+}
+
+.prediction-error-detail div {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.prediction-error-detail dt {
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 3.5rem;
+}
+
+.prediction-error-detail dd {
+  margin: 0;
+  word-break: break-all;
+}
+
+.prediction-error-url {
+  font-family: ui-monospace, monospace;
+  font-size: 0.68rem;
+}
+
 .prediction-h3 {
   margin: 16px 0 8px;
   font-size: 0.88rem;

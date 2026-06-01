@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchRacePrediction } from '../api/client';
+import { ApiError, fetchRacePrediction, formatApiError } from '../api/client';
 import './PredictionSection.css';
 
 function ConfidenceMeter({ percent, tier, label }) {
@@ -48,11 +48,13 @@ export default function PredictionSection({ raceId, refreshKey = null }) {
   const [loading, setLoading] = useState(true);
   const [prediction, setPrediction] = useState(null);
   const [error, setError] = useState(null);
+  const [errorDetail, setErrorDetail] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setErrorDetail(null);
 
     fetchRacePrediction(raceId)
       .then((res) => {
@@ -61,7 +63,15 @@ export default function PredictionSection({ raceId, refreshKey = null }) {
       .catch((err) => {
         if (!cancelled) {
           console.error('[PredictionSection] fetch failed', err);
-          setError(err.message || '予想の取得に失敗しました');
+          setError(formatApiError(err, 'Prediction API'));
+          if (err instanceof ApiError) {
+            setErrorDetail({
+              status: err.status,
+              path: err.path,
+              url: err.url,
+              body: err.body,
+            });
+          }
         }
       })
       .finally(() => {
@@ -83,12 +93,34 @@ export default function PredictionSection({ raceId, refreshKey = null }) {
   }
 
   if (error) {
+    const isRouteMissing =
+      errorDetail?.status === 404 && errorDetail?.body?.error === 'Not found';
     return (
       <section className="prediction card">
         <h2 className="prediction-title">AI買い目提案</h2>
-        <p className="prediction-empty">{error}</p>
+        <p className="prediction-empty prediction-error-main">{error}</p>
+        {errorDetail && (
+          <dl className="prediction-error-detail">
+            <div>
+              <dt>Status</dt>
+              <dd>{errorDetail.status || '—'}</dd>
+            </div>
+            <div>
+              <dt>Path</dt>
+              <dd>{errorDetail.path}</dd>
+            </div>
+            {errorDetail.url && (
+              <div>
+                <dt>URL</dt>
+                <dd className="prediction-error-url">{errorDetail.url}</dd>
+              </div>
+            )}
+          </dl>
+        )}
         <p className="prediction-hint">
-          API（/api/races/…/prediction）の接続を確認してください。
+          {isRouteMissing
+            ? 'バックエンドに prediction ルートがありません。Render の boat-ai-api を commit 9362572 以降で再デプロイし、/api/health の apiFeatures.racePrediction が true か確認してください。'
+            : 'VITE_API_URL・CORS・Network タブで上記 URL の応答を確認してください。'}
         </p>
       </section>
     );

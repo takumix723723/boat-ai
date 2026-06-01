@@ -34,6 +34,15 @@ router.get('/', async (_req, res) => {
     version: process.env.npm_package_version ?? '0.1.0',
     environment: process.env.NODE_ENV || 'development',
     render: process.env.RENDER === 'true',
+    deploy: {
+      gitCommit: process.env.RENDER_GIT_COMMIT ?? null,
+      serviceId: process.env.RENDER_SERVICE_ID ?? null,
+    },
+    apiFeatures: {
+      racePrediction: true,
+      raceResult: true,
+      raceHistory: true,
+    },
     dataMode: process.env.BOATRACE_DATA_MODE || 'auto',
     persistence,
     database,

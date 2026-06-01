@@ -1,15 +1,58 @@
 const BASE = import.meta.env.VITE_API_URL || '';
 
+export class ApiError extends Error {
+  /**
+   * @param {string} message
+   * @param {{ status: number, path: string, url: string, body?: object }} detail
+   */
+  constructor(message, detail) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = detail.status;
+    this.path = detail.path;
+    this.url = detail.url;
+    this.body = detail.body ?? null;
+  }
+}
+
 async function request(path, options = {}) {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
-  });
+  const url = `${BASE}${path}`;
+  let res;
+  try {
+    res = await fetch(url, {
+      headers: { 'Content-Type': 'application/json', ...options.headers },
+      ...options,
+    });
+  } catch (networkErr) {
+    throw new ApiError(
+      `Network error: ${networkErr.message || 'fetch failed'}`,
+      { status: 0, path, url, body: null }
+    );
+  }
+
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `API error ${res.status}`);
+    const body = await res.json().catch(() => ({}));
+    const serverMsg =
+      typeof body?.error === 'string' ? body.error : `HTTP ${res.status}`;
+    throw new ApiError(serverMsg, {
+      status: res.status,
+      path,
+      url,
+      body,
+    });
   }
   return res.json();
+}
+
+/** @param {ApiError|Error} err */
+export function formatApiError(err, label = 'API') {
+  if (err instanceof ApiError) {
+    if (err.status === 0) {
+      return `${label} error: network — ${err.message}`;
+    }
+    return `${label} error: ${err.status} — ${err.message}`;
+  }
+  return `${label} error: ${err.message || 'unknown'}`;
 }
 
 export function fetchRaces(date = 'today') {

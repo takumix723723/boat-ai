@@ -32,6 +32,12 @@ async function run() {
       } else if (c.name === 'health') {
         console.log('   status:', body.status, '| db:', body.database?.ok);
         console.log('   persistence:', body.persistence?.enabled);
+        console.log('   deploy:', body.deploy?.gitCommit ?? '(local)');
+        console.log('   apiFeatures:', JSON.stringify(body.apiFeatures ?? {}));
+        if (!body.apiFeatures?.racePrediction) {
+          console.log('   WARN: racePrediction feature flag missing — redeploy API (9362572+)');
+          failed += 1;
+        }
       }
     } catch (err) {
       console.log(`FAIL ${c.name} ${url}`);
@@ -49,7 +55,22 @@ async function run() {
     const ok = res.ok;
     console.log(`${ok ? 'OK' : 'FAIL'} refresh ${res.status}`);
     if (ok) {
-      console.log('   races:', body?.races?.length ?? body?.meta?.raceCount ?? '(see response)');
+      const raceId = body?.races?.[0]?.id;
+      console.log('   races:', body?.races?.length ?? '(see response)');
+      if (raceId) {
+        const predUrl = `${base}/api/races/${encodeURIComponent(raceId)}/prediction?date=today`;
+        const predRes = await fetch(predUrl);
+        const predBody = await predRes.json().catch(() => ({}));
+        console.log(
+          `${predRes.ok ? 'OK' : 'FAIL'} prediction ${predRes.status} ${predUrl}`
+        );
+        if (!predRes.ok) {
+          console.log('  ', JSON.stringify(predBody).slice(0, 200));
+          failed += 1;
+        } else if (!predBody?.prediction?.recommendations?.length) {
+          console.log('   WARN: prediction.available or recommendations empty');
+        }
+      }
     } else {
       console.log('  ', JSON.stringify(body).slice(0, 200));
       failed += 1;
