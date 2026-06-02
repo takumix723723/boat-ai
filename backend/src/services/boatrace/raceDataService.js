@@ -223,7 +223,6 @@ export async function loadRaces(date = 'today') {
 
   const stored = { ...withScores, loadedAt: Date.now() };
   cache.set(key, stored);
-  await persistDatasetIfEnabled(stored);
   return stored;
 }
 

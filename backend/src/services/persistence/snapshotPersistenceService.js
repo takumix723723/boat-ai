@@ -16,7 +16,23 @@ export async function persistDatasetIfEnabled(dataset) {
   try {
     const repo = getSnapshotRepository();
     const result = await repo.saveLiveDataset(dataset.races, dataset.meta ?? {});
-    console.info('[snapshotPersistence] saved', result);
+    const snapAttempts =
+      (result.snapshotsCreated ?? 0) + (result.snapshotsSkipped ?? 0);
+    const adviceAttempts =
+      (result.adviceWritten ?? 0) + (result.adviceSkipped ?? 0);
+    console.info('[snapshotPersistence] refresh persist', {
+      ...result,
+      snapshotSkipRate:
+        snapAttempts > 0
+          ? `${Math.round(((result.snapshotsSkipped ?? 0) / snapAttempts) * 100)}%`
+          : 'n/a',
+      adviceSkipRate:
+        adviceAttempts > 0
+          ? `${Math.round(((result.adviceSkipped ?? 0) / adviceAttempts) * 100)}%`
+          : 'n/a',
+      payloadNote:
+        'prediction_payload: hash change or STORE_PREDICTION_PAYLOAD=true only',
+    });
     queueLearningAfterRefresh();
     return result;
   } catch (err) {

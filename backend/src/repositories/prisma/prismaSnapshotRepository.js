@@ -4,6 +4,7 @@ import {
   upsertBetAdviceInTransaction,
   afterRacePersisted,
 } from '../../services/prediction/raceBetAdviceService.js';
+import { buildRaceFingerprint } from '../../services/persistence/snapshotFingerprint.js';
 import { PrismaRacerRepository } from './prismaRacerRepository.js';
 import { PrismaRaceRepository } from './prismaRaceRepository.js';
 
@@ -30,8 +31,18 @@ export class PrismaSnapshotRepository {
   async saveLiveDataset(races, globalMeta = {}) {
     const prisma = getPrisma();
     const capturedAt = new Date(globalMeta.fetchedAt ?? Date.now());
-    let snapshotsCreated = 0;
-    let aiScoresCreated = 0;
+    const stats = {
+      racesProcessed: races.length,
+      snapshotsCreated: 0,
+      snapshotsSkipped: 0,
+      aiScoresCreated: 0,
+      aiScoresSkipped: 0,
+      adviceWritten: 0,
+      adviceSkipped: 0,
+      payloadWritten: 0,
+      payloadSkipped: 0,
+      capturedAt: capturedAt.toISOString(),
+    };
 
     // Neon 等: 全レース1トランザクションだと P2028 になりやすいためレース単位
     for (const race of races) {
@@ -39,19 +50,20 @@ export class PrismaSnapshotRepository {
         async (tx) => this.saveOneRace(tx, race, globalMeta, capturedAt),
         { timeout: 30_000 }
       );
-      snapshotsCreated += result.snapshotsCreated;
-      aiScoresCreated += result.aiScoresCreated;
+      stats.snapshotsCreated += result.snapshotsCreated;
+      stats.snapshotsSkipped += result.snapshotsSkipped;
+      stats.aiScoresCreated += result.aiScoresCreated;
+      stats.aiScoresSkipped += result.aiScoresSkipped;
+      stats.adviceWritten += result.adviceWritten;
+      stats.adviceSkipped += result.adviceSkipped;
+      stats.payloadWritten += result.payloadWritten;
+      stats.payloadSkipped += result.payloadSkipped;
       if (result.raceUuid) {
         await afterRacePersisted(race, result.raceUuid);
       }
     }
 
-    return {
-      racesProcessed: races.length,
-      snapshotsCreated,
-      aiScoresCreated,
-      capturedAt: capturedAt.toISOString(),
-    };
+    return stats;
   }
 
   /**
@@ -60,7 +72,16 @@ export class PrismaSnapshotRepository {
   async saveOneRace(tx, race, globalMeta, capturedAt) {
     const racerRepo = new PrismaRacerRepository(tx);
     const raceRepo = new PrismaRaceRepository(tx);
-    let aiScoresCreated = 0;
+    const persistStats = {
+      snapshotsCreated: 0,
+      snapshotsSkipped: 0,
+      aiScoresCreated: 0,
+      aiScoresSkipped: 0,
+      adviceWritten: 0,
+      adviceSkipped: 0,
+      payloadWritten: 0,
+      payloadSkipped: 0,
+    };
 
     for (const entry of race.entries ?? []) {
       await racerRepo.upsert({
@@ -95,73 +116,109 @@ export class PrismaSnapshotRepository {
       entryIdByLane.set(entry.lane, row.id);
     }
 
-    const agg = await tx.raceSnapshot.aggregate({
+    const fingerprint = buildRaceFingerprint(race);
+    const latestSnap = await tx.raceSnapshot.findFirst({
       where: { raceId: raceRow.id },
-      _max: { sequence: true },
+      orderBy: [{ sequence: 'desc' }],
+      select: { id: true, meta: true },
     });
-    const sequence = (agg._max.sequence ?? 0) + 1;
+    const prevFingerprint =
+      latestSnap?.meta &&
+      typeof latestSnap.meta === 'object' &&
+      latestSnap.meta.fingerprint;
 
-    const dataSource =
-      race.meta?.dataSource ?? globalMeta.dataSource ?? 'unknown';
+    let snapshotId = latestSnap?.id ?? null;
 
-    const snapshot = await tx.raceSnapshot.create({
-      data: {
-        raceId: raceRow.id,
-        capturedAt,
-        sequence,
-        status: race.status ?? null,
-        startTime: race.startTime ?? null,
-        lastMinute: race.lastMinute ?? undefined,
-        dataSource,
-        officialResult: isRealOfficialResult(race.officialResult)
-          ? race.officialResult
-          : undefined,
-        meta: {
-          ...(race.meta ?? {}),
-          globalFetchedAt: globalMeta.fetchedAt,
-        },
-      },
-    });
+    if (prevFingerprint === fingerprint && latestSnap) {
+      persistStats.snapshotsSkipped = 1;
+      persistStats.aiScoresSkipped = (race.entries ?? []).filter((e) => e.aiScore)
+        .length;
+    } else {
+      const agg = await tx.raceSnapshot.aggregate({
+        where: { raceId: raceRow.id },
+        _max: { sequence: true },
+      });
+      const sequence = (agg._max.sequence ?? 0) + 1;
 
-    for (const entry of race.entries ?? []) {
-      const raceEntryId = entryIdByLane.get(entry.lane);
-      if (!raceEntryId || !entry.aiScore) continue;
+      const dataSource =
+        race.meta?.dataSource ?? globalMeta.dataSource ?? 'unknown';
 
-      await tx.aiScore.create({
+      const snapshot = await tx.raceSnapshot.create({
         data: {
-          snapshotId: snapshot.id,
-          raceEntryId,
-          total: entry.aiScore.total,
-          previousTotal: entry.previousAiScore ?? null,
-          breakdown: {
-            st: entry.aiScore.st,
-            exhibitionTime: entry.aiScore.exhibitionTime,
-            lane: entry.aiScore.lane,
-            motor: entry.aiScore.motor,
-            racer: entry.aiScore.racer,
-            rank: entry.aiScore.rank,
-            course: entry.aiScore.course,
-            lastMinute: entry.aiScore.lastMinute,
+          raceId: raceRow.id,
+          capturedAt,
+          sequence,
+          status: race.status ?? null,
+          startTime: race.startTime ?? null,
+          lastMinute: race.lastMinute ?? undefined,
+          dataSource,
+          officialResult: isRealOfficialResult(race.officialResult)
+            ? race.officialResult
+            : undefined,
+          meta: {
+            ...(race.meta ?? {}),
+            globalFetchedAt: globalMeta.fetchedAt,
+            fingerprint,
           },
-          scoreDelta: entry.scoreDelta ?? undefined,
-          st: toDecimal(entry.st),
-          exhibitionTime: toDecimal(entry.exhibitionTime),
-          tilt: toDecimal(entry.tilt),
         },
       });
-      aiScoresCreated += 1;
+
+      snapshotId = snapshot.id;
+      persistStats.snapshotsCreated = 1;
+
+      for (const entry of race.entries ?? []) {
+        const raceEntryId = entryIdByLane.get(entry.lane);
+        if (!raceEntryId || !entry.aiScore) continue;
+
+        await tx.aiScore.create({
+          data: {
+            snapshotId: snapshot.id,
+            raceEntryId,
+            total: entry.aiScore.total,
+            previousTotal: entry.previousAiScore ?? null,
+            breakdown: {
+              st: entry.aiScore.st,
+              exhibitionTime: entry.aiScore.exhibitionTime,
+              lane: entry.aiScore.lane,
+              motor: entry.aiScore.motor,
+              racer: entry.aiScore.racer,
+              rank: entry.aiScore.rank,
+              course: entry.aiScore.course,
+              lastMinute: entry.aiScore.lastMinute,
+            },
+            scoreDelta: entry.scoreDelta ?? undefined,
+            st: toDecimal(entry.st),
+            exhibitionTime: toDecimal(entry.exhibitionTime),
+            tilt: toDecimal(entry.tilt),
+          },
+        });
+        persistStats.aiScoresCreated += 1;
+      }
     }
 
-    try {
-      await upsertBetAdviceInTransaction(tx, race, raceRow.id, snapshot.id);
-    } catch (err) {
-      console.warn('[snapshot] bet advice upsert skipped', {
-        raceId: race.id,
-        message: err.message,
-      });
+    if (snapshotId) {
+      try {
+        const adviceResult = await upsertBetAdviceInTransaction(
+          tx,
+          race,
+          raceRow.id,
+          snapshotId
+        );
+        if (adviceResult) {
+          if (adviceResult.adviceWritten) persistStats.adviceWritten = 1;
+          else persistStats.adviceSkipped = 1;
+          if (adviceResult.payloadWritten) persistStats.payloadWritten = 1;
+          else persistStats.payloadSkipped = 1;
+        }
+      } catch (err) {
+        console.warn('[snapshot] bet advice upsert skipped', {
+          raceId: race.id,
+          message: err.message,
+        });
+      }
     }
 
-    return { snapshotsCreated: 1, aiScoresCreated, raceUuid: raceRow.id };
+    return { ...persistStats, raceUuid: raceRow.id };
   }
 
   async getStats() {

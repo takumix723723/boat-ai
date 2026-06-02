@@ -6,6 +6,10 @@ import { buildFormationParts, buildBoxParts } from './predictionBetSpec.js';
 import { buildRacePrediction } from './racePredictionService.js';
 import { buildRaceBetDecision } from './raceBetDecisionService.js';
 import { evaluateAllBetHits } from './predictionHitEvaluators.js';
+import {
+  buildAdviceStructuralFingerprint,
+  applyPredictionPayloadPolicy,
+} from '../persistence/snapshotFingerprint.js';
 
 function toDecimal(value) {
   if (value == null || Number.isNaN(value)) return null;
@@ -101,27 +105,75 @@ export function buildAdviceRowFromRace(race, raceUuid, snapshotId) {
  * @param {object} race
  * @param {string} raceUuid
  * @param {string} snapshotId
+ * @returns {Promise<{ row: object|null, adviceWritten: boolean, adviceSkipped: boolean, payloadWritten: boolean, payloadSkipped: boolean }|null>}
  */
 export async function upsertBetAdviceInTransaction(tx, race, raceUuid, snapshotId) {
-  const row = buildAdviceRowFromRace(race, raceUuid, snapshotId);
-  if (!row) return null;
+  const built = buildAdviceRowFromRace(race, raceUuid, snapshotId);
+  if (!built) return null;
+
+  const prediction = built.predictionPayload;
 
   const existing = await tx.raceBetAdvice.findUnique({
     where: { raceId: raceUuid },
-    select: { resultStatus: true },
   });
+
   if (existing?.resultStatus === 'settled') {
-    return row;
+    return {
+      row: built,
+      adviceWritten: false,
+      adviceSkipped: true,
+      payloadWritten: false,
+      payloadSkipped: true,
+    };
   }
 
-  const { resultStatus: _rs, ...updateRow } = row;
+  const structuralFp = buildAdviceStructuralFingerprint(built);
+  const existingFp = existing
+    ? buildAdviceStructuralFingerprint({
+        verdict: existing.verdict,
+        honmeiLane: existing.honmeiLane,
+        honmeiTrifectaCombo: existing.honmeiTrifectaCombo,
+        honmeiConfidencePercent: existing.honmeiConfidencePercent,
+        honmeiConfidenceTier: existing.honmeiConfidenceTier,
+        formationJson: existing.formationJson,
+        boxJson: existing.boxJson,
+        anaCombo: existing.anaCombo,
+        betScore: Number(existing.betScore),
+        skipScore: Number(existing.skipScore),
+        evHonmei: existing.evHonmei != null ? Number(existing.evHonmei) : null,
+        hasEdge: existing.hasEdge,
+      })
+    : null;
+
+  if (existing && structuralFp === existingFp) {
+    return {
+      row: built,
+      adviceWritten: false,
+      adviceSkipped: true,
+      payloadWritten: false,
+      payloadSkipped: true,
+    };
+  }
+
+  const { predictionPayload: _pp, ...baseRow } = built;
+  const { row: rowForDb, payloadWritten, payloadSkipped } =
+    applyPredictionPayloadPolicy(baseRow, existing, prediction);
+
+  const { resultStatus: _rs, ...updateRow } = rowForDb;
+
   await tx.raceBetAdvice.upsert({
     where: { raceId: raceUuid },
-    create: row,
+    create: rowForDb,
     update: updateRow,
   });
 
-  return row;
+  return {
+    row: built,
+    adviceWritten: true,
+    adviceSkipped: false,
+    payloadWritten,
+    payloadSkipped,
+  };
 }
 
 /**
