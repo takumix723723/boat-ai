@@ -77,10 +77,12 @@ export class PrismaSnapshotRepository {
           lane: entry.lane,
           racerId: entry.racerId,
           motor: entry.motor ?? undefined,
+          racerStats: entry.racerStats ?? undefined,
         },
         update: {
           racerId: entry.racerId,
           motor: entry.motor ?? undefined,
+          racerStats: entry.racerStats ?? undefined,
         },
       });
       entryIdByLane.set(entry.lane, row.id);
@@ -129,6 +131,8 @@ export class PrismaSnapshotRepository {
             exhibitionTime: entry.aiScore.exhibitionTime,
             lane: entry.aiScore.lane,
             motor: entry.aiScore.motor,
+            racer: entry.aiScore.racer,
+            rank: entry.aiScore.rank,
             course: entry.aiScore.course,
             lastMinute: entry.aiScore.lastMinute,
           },

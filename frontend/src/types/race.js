@@ -7,7 +7,9 @@ export const SCORE_LABELS = {
   st: 'ST',
   exhibitionTime: '展示T',
   lane: '枠順',
-  motor: '機材力',
+  motor: 'モーター',
+  racer: '選手力',
+  rank: '級',
   course: 'コース',
   lastMinute: '直前',
 };

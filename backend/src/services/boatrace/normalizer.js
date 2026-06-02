@@ -7,6 +7,7 @@ import {
   formatWeather,
 } from './constants.js';
 import { mapMotorFromProgram } from './motorEvaluation.js';
+import { mapRacerStatsFromProgram } from './racerStats.js';
 
 export function raceKey(program) {
   return `${program.race_date}-${program.race_stadium_number}-${program.race_number}`;
@@ -54,6 +55,7 @@ function mapEntry(programBoat, previewBoat) {
     exhibitionTime: previewBoat?.racer_exhibition_time ?? null,
     tilt: previewBoat?.racer_tilt_adjustment ?? null,
     motor: mapMotorFromProgram(programBoat),
+    racerStats: mapRacerStatsFromProgram(programBoat),
     aiScore: null,
     previousAiScore: null,
   };

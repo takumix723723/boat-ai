@@ -5,11 +5,16 @@ import {
   validateWeights,
   profileRowToDto,
   profileRowToWeights,
+  profileRowToCalibration,
   WEIGHT_FACTOR_LABELS,
 } from './weightConfig.js';
+import { DEFAULT_CALIBRATION } from './rankCalibration.js';
 
 /** @type {Record<string, number>} */
 let cachedActiveWeights = { ...DEFAULT_WEIGHTS };
+
+/** @type {object} */
+let cachedActiveCalibration = { ...DEFAULT_CALIBRATION };
 
 /** @type {import('@prisma/client').AiWeightProfile | null} */
 let cachedActiveProfile = null;
@@ -22,6 +27,10 @@ export function getActiveWeightsSync() {
   return cachedActiveWeights;
 }
 
+export function getActiveCalibrationSync() {
+  return cachedActiveCalibration;
+}
+
 export function getActiveProfileCache() {
   return cachedActiveProfile;
 }
@@ -29,6 +38,7 @@ export function getActiveProfileCache() {
 export async function refreshActiveWeightsCache() {
   if (!isDatabaseConfigured()) {
     cachedActiveWeights = { ...DEFAULT_WEIGHTS };
+    cachedActiveCalibration = { ...DEFAULT_CALIBRATION };
     cachedActiveProfile = null;
     return cachedActiveWeights;
   }
@@ -45,14 +55,17 @@ export async function refreshActiveWeightsCache() {
     }
     if (row) {
       cachedActiveWeights = profileRowToWeights(row);
+      cachedActiveCalibration = profileRowToCalibration(row);
       cachedActiveProfile = row;
     } else {
       cachedActiveWeights = { ...DEFAULT_WEIGHTS };
+      cachedActiveCalibration = { ...DEFAULT_CALIBRATION };
       cachedActiveProfile = null;
     }
   } catch (err) {
     console.error('[weightProfile] cache refresh failed', err.message);
     cachedActiveWeights = { ...DEFAULT_WEIGHTS };
+    cachedActiveCalibration = { ...DEFAULT_CALIBRATION };
   }
 
   return cachedActiveWeights;
@@ -68,6 +81,7 @@ export async function listWeightProfiles() {
       profiles: [],
       factorLabels: WEIGHT_FACTOR_LABELS,
       defaultWeights: DEFAULT_WEIGHTS,
+      defaultCalibration: DEFAULT_CALIBRATION,
     };
   }
 
@@ -89,11 +103,12 @@ export async function listWeightProfiles() {
     profiles: rows.map(profileRowToDto),
     factorLabels: WEIGHT_FACTOR_LABELS,
     defaultWeights: DEFAULT_WEIGHTS,
+    defaultCalibration: DEFAULT_CALIBRATION,
   };
 }
 
 /**
- * @param {{ id?: string, name?: string, label?: string, weights?: object, setActive?: boolean }} body
+ * @param {{ id?: string, name?: string, label?: string, weights?: object, calibration?: object, setActive?: boolean }} body
  */
 export async function upsertWeightProfile(body) {
   if (!isDatabaseConfigured()) {
@@ -106,11 +121,19 @@ export async function upsertWeightProfile(body) {
   }
 
   const label = (body.label || name).trim();
-  const weights = normalizeWeights(body.weights ?? {});
-  const validation = validateWeights(weights);
+  const validation = validateWeights(body.weights ?? {});
   if (!validation.ok) {
     throw new Error(validation.error);
   }
+  const weights = validation.normalized ?? normalizeWeights(body.weights ?? {});
+
+  const calibration =
+    body.calibration && typeof body.calibration === 'object'
+      ? {
+          version: body.calibration.version ?? 1,
+          rankScores: body.calibration.rankScores ?? null,
+        }
+      : undefined;
 
   const prisma = getPrisma();
   const data = {
@@ -122,6 +145,9 @@ export async function upsertWeightProfile(body) {
     weightMotor: weights.motor,
     weightCourse: weights.course,
     weightLastMinute: weights.lastMinute,
+    weightRank: weights.rank,
+    weightRacer: weights.racer,
+    ...(calibration !== undefined ? { calibrationJson: calibration } : {}),
     ...(body.setActive ? { isActive: true } : {}),
   };
 
@@ -134,7 +160,11 @@ export async function upsertWeightProfile(body) {
   } else {
     row = await prisma.aiWeightProfile.upsert({
       where: { name },
-      create: { ...data, isActive: Boolean(body.setActive) },
+      create: {
+        ...data,
+        isActive: Boolean(body.setActive),
+        calibrationJson: calibration ?? DEFAULT_CALIBRATION,
+      },
       update: data,
     });
   }

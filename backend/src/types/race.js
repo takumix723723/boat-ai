@@ -3,9 +3,17 @@
  * @property {number|null} motorNo     - モーター号機（強さではない）
  * @property {number|null} rate2nd     - モーター2連対率 %
  * @property {number|null} rate3rd     - モーター3連対率 %
- * @property {number|null} winRate     - 全国勝率 %（選手）
- * @property {number|null} localWinRate - 当地勝率 %
  * @property {string} [note]
+ */
+
+/**
+ * @typedef {Object} RacerStats
+ * @property {number|null} nationalWin
+ * @property {number|null} national2nd
+ * @property {number|null} national3rd
+ * @property {number|null} localWin
+ * @property {number|null} local2nd
+ * @property {number|null} local3rd
  */
 
 /**
@@ -23,6 +31,8 @@
  * @property {number} exhibitionTime
  * @property {number} lane
  * @property {number} motor
+ * @property {number} racer
+ * @property {number} rank
  * @property {number} course
  * @property {number} lastMinute
  * @property {number} total
@@ -39,8 +49,9 @@
  * @property {number|null} exhibitionTime
  * @property {number|null} tilt
  * @property {MotorEvaluation} motor
+ * @property {RacerStats} [racerStats]
  * @property {AiScoreBreakdown} aiScore
- * @property {number|null} previousAiScore - 点数変化表示用（将来）
+ * @property {number|null} previousAiScore
  */
 
 /**

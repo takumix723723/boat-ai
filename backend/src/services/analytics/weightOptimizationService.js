@@ -2,7 +2,11 @@ import { getPrisma } from '../../db/client.js';
 import {
   DEFAULT_WEIGHTS,
   WEIGHT_FACTOR_LABELS,
+  FACTOR_KEYS,
+  mergeAndNormalizeWeights,
+  MAX_RANK_WEIGHT,
 } from '../ai/weightConfig.js';
+import { DEFAULT_CALIBRATION } from '../ai/rankCalibration.js';
 import {
   getActiveWeightsSync,
   listWeightProfiles,
@@ -19,8 +23,6 @@ import {
   MIN_RACES_FOR_SPLIT,
 } from './trainTestSplit.js';
 
-const FACTOR_KEYS = Object.keys(DEFAULT_WEIGHTS);
-
 const DEFAULT_TRIALS = 64;
 const MAX_TRIALS = 100;
 const TOP_RESULTS = 10;
@@ -34,17 +36,23 @@ function isDatabaseConfigured() {
  * 非負の乱数から合計1.0の重みベクトルを生成
  */
 export function randomWeightVector() {
-  const raw = FACTOR_KEYS.map(() => 0.04 + Math.random() * 0.32);
+  const raw = FACTOR_KEYS.map(() => 0.04 + Math.random() * 0.28);
   const sum = raw.reduce((a, b) => a + b, 0);
-  const weights = {};
-  let allocated = 0;
-  for (let i = 0; i < FACTOR_KEYS.length - 1; i++) {
-    const key = FACTOR_KEYS[i];
-    weights[key] = Math.round((raw[i] / sum) * 1000) / 1000;
-    allocated += weights[key];
+  const partial = {};
+  for (let i = 0; i < FACTOR_KEYS.length; i++) {
+    partial[FACTOR_KEYS[i]] = raw[i] / sum;
   }
-  weights[FACTOR_KEYS[FACTOR_KEYS.length - 1]] =
-    Math.round((1 - allocated) * 1000) / 1000;
+  const weights = mergeAndNormalizeWeights(partial);
+  if (weights.rank > MAX_RANK_WEIGHT) {
+    const excess = weights.rank - MAX_RANK_WEIGHT;
+    weights.rank = MAX_RANK_WEIGHT;
+    const others = FACTOR_KEYS.filter((k) => k !== 'rank');
+    const otherSum = others.reduce((s, k) => s + weights[k], 0);
+    for (const k of others) {
+      weights[k] += (excess * weights[k]) / otherSum;
+    }
+    return mergeAndNormalizeWeights(weights);
+  }
   return weights;
 }
 
@@ -112,7 +120,11 @@ export async function optimizeWeights(options = {}) {
     const key = FACTOR_KEYS.map((k) => weights[k].toFixed(3)).join(',');
     if (seen.has(key)) return;
     seen.add(key);
-    const { metrics } = simulateAccuracyForWeights(weights, trainCases);
+    const { metrics } = simulateAccuracyForWeights(
+      weights,
+      trainCases,
+      DEFAULT_CALIBRATION
+    );
     candidates.push(metricsToSummary(weights, metrics, meta));
   }
 
@@ -147,7 +159,8 @@ export async function optimizeWeights(options = {}) {
 
   const trainBestMetrics = simulateAccuracyForWeights(
     best.weights,
-    trainCases
+    trainCases,
+    DEFAULT_CALIBRATION
   ).metrics;
   const trainAccuracy = metricsToAccuracyBlock(trainBestMetrics);
 
@@ -157,19 +170,28 @@ export async function optimizeWeights(options = {}) {
   if (useSplit && testCases.length > 0) {
     const testBestMetrics = simulateAccuracyForWeights(
       best.weights,
-      testCases
+      testCases,
+      DEFAULT_CALIBRATION
     ).metrics;
     testAccuracy = metricsToAccuracyBlock(testBestMetrics);
     overfitWarning = evaluateOverfit(trainAccuracy, testAccuracy);
   }
 
   const baselineTrain = metricsToAccuracyBlock(
-    simulateAccuracyForWeights(baselineWeights, trainCases).metrics
+    simulateAccuracyForWeights(
+      baselineWeights,
+      trainCases,
+      DEFAULT_CALIBRATION
+    ).metrics
   );
   const baselineTest =
     useSplit && testCases.length > 0
       ? metricsToAccuracyBlock(
-          simulateAccuracyForWeights(baselineWeights, testCases).metrics
+          simulateAccuracyForWeights(
+            baselineWeights,
+            testCases,
+            DEFAULT_CALIBRATION
+          ).metrics
         )
       : null;
 

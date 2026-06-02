@@ -1,5 +1,6 @@
 import { getPrisma } from '../../db/client.js';
-import { totalFromBreakdown } from '../ai/weightConfig.js';
+import { calculateAiScore } from '../aiScore.js';
+import { DEFAULT_CALIBRATION } from '../ai/rankCalibration.js';
 import {
   evaluateRaceAccuracy,
   aggregateAccuracyMetrics,
@@ -11,23 +12,34 @@ function isDatabaseConfigured() {
 }
 
 /**
- * 保存済み breakdown + 重みプロファイルで総合点を再計算し精度を集計
+ * 生データからフル再計算して精度を集計
  * @param {Record<string, number>} weights
+ * @param {Awaited<ReturnType<typeof buildAccuracyRaceCases>>} raceCases
+ * @param {object|null} [calibration]
  */
-export function simulateAccuracyForWeights(weights, raceCases) {
+export function simulateAccuracyForWeights(
+  weights,
+  raceCases,
+  calibration = DEFAULT_CALIBRATION
+) {
   const perRace = [];
   const venueRows = [];
 
   for (const raceCase of raceCases) {
-    const entries = raceCase.entries.map((e) => ({
-      lane: e.lane,
-      racerId: e.racerId,
-      name: e.name,
-      aiScore: {
-        total: totalFromBreakdown(e.breakdown, weights),
-        ...e.breakdown,
-      },
-    }));
+    const entries = raceCase.entries.map((entry) => {
+      const aiScore = calculateAiScore(
+        entry,
+        raceCase.lastMinute,
+        weights,
+        calibration
+      );
+      return {
+        lane: entry.lane,
+        racerId: entry.racerId,
+        name: entry.name,
+        aiScore,
+      };
+    });
 
     const metric = evaluateRaceAccuracy(entries, raceCase.placements);
     if (!metric) continue;
@@ -47,7 +59,7 @@ export function simulateAccuracyForWeights(weights, raceCases) {
 }
 
 /**
- * @param {{ id: string, name: string, label: string, weights: Record<string, number>, isActive?: boolean }[]} profiles
+ * @param {{ id: string, name: string, label: string, weights: Record<string, number>, isActive?: boolean, calibration?: object }[]} profiles
  */
 export async function simulateProfilesAccuracy(profiles) {
   if (!isDatabaseConfigured()) {
@@ -61,7 +73,12 @@ export async function simulateProfilesAccuracy(profiles) {
   if (!cases.length) return [];
 
   return profiles.map((profile) => {
-    const { metrics } = simulateAccuracyForWeights(profile.weights, cases);
+    const calibration = profile.calibration ?? DEFAULT_CALIBRATION;
+    const { metrics } = simulateAccuracyForWeights(
+      profile.weights,
+      cases,
+      calibration
+    );
     return {
       profileId: profile.id,
       name: profile.name,

@@ -41,7 +41,9 @@ raceRepository.js  → API 層向けインメモリ参照・手動更新
 | 遅延 | 最大約30分のラグ |
 | 日付 | v2 programs は **2025-05-01以降** のデータ想定 |
 | 非開催日 | 空配列 → フォールバックの可能性 |
-| モーター | `motorNo`（号機・強さではない）+ `rate2nd`/`rate3rd` + 選手勝率。AIは2連率等のみ使用 |
+| モーター | `motorNo`（表示）+ `rate2nd`/`rate3rd`。AIモーター因子は2連/3連のみ |
+| 選手成績 | Open API の全国/当地 1着・2連・3連 → `racerStats` → AI選手力因子 |
+| 級 | `racer_class_number` → A1/A2/B1/B2 → AI級因子（スコア表は calibration_json） |
 | 支部名 | 番号マップ未登録は `支部{n}` 表示 |
 | 手動編集 | PATCH 直前情報はメモリ上書き（永続化なし） |
 

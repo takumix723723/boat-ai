@@ -401,7 +401,7 @@ const rawRaces = [
   },
 ];
 
-/** モック: 旧 score フィールドを号機+2連率形式へ（号機はAIに使わない） */
+/** モック: 号機+2連/3連（選手勝率は racerStats へ） */
 function normalizeMockMotor(motor, lane) {
   if (!motor) return motor;
   const rate2nd = motor.rate2nd ?? null;
@@ -410,11 +410,23 @@ function normalizeMockMotor(motor, lane) {
     motorNo: motor.motorNo ?? 20 + lane * 7,
     rate2nd,
     rate3rd,
-    winRate:
-      motor.winRate ??
-      (rate2nd != null ? Math.round(rate2nd * 0.11 * 10) / 10 : null),
-    localWinRate: motor.localWinRate ?? null,
     note: motor.note ?? null,
+  };
+}
+
+function mockRacerStatsFromEntry(entry) {
+  const m = entry.motor ?? {};
+  const rate2nd = m.rate2nd ?? 35;
+  const rate3rd = m.rate3rd ?? 48;
+  const win =
+    m.winRate ?? (rate2nd != null ? Math.round(rate2nd * 0.11 * 10) / 10 : 5);
+  return {
+    nationalWin: win,
+    national2nd: Math.min(75, Math.round(rate2nd * 0.72)),
+    national3rd: Math.min(85, Math.round(rate3rd * 0.85)),
+    localWin: m.localWinRate ?? Math.max(0, win - 1.5),
+    local2nd: Math.min(70, Math.round(rate2nd * 0.65)),
+    local3rd: Math.min(80, Math.round(rate3rd * 0.78)),
   };
 }
 
@@ -426,6 +438,7 @@ export function getMockRaces() {
       entries: r.entries.map((e) => ({
         ...e,
         motor: normalizeMockMotor(e.motor, e.lane),
+        racerStats: e.racerStats ?? mockRacerStatsFromEntry(e),
       })),
     };
     copy.officialResult = {

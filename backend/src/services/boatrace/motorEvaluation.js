@@ -8,15 +8,10 @@ export function mapMotorFromProgram(boat) {
   const motorNo = boat.racer_assigned_motor_number ?? null;
   const rate2nd = boat.racer_assigned_motor_top_2_percent ?? null;
   const rate3rd = boat.racer_assigned_motor_top_3_percent ?? null;
-  const winRate = boat.racer_national_top_1_percent ?? null;
-  const localWinRate = boat.racer_local_top_1_percent ?? null;
-
   return {
     motorNo,
     rate2nd,
     rate3rd,
-    winRate,
-    localWinRate,
     note:
       rate2nd == null
         ? 'モーター2連率未取得'
@@ -27,7 +22,7 @@ export function mapMotorFromProgram(boat) {
 }
 
 /**
- * AI採点用: 2連率・3連率・勝率から0-100の機材力スコア（号機は未使用）
+ * AI採点用: モーター2連率・3連率のみ（号機・選手勝率は未使用）
  * @param {import('../../types/race.js').MotorEvaluation|null|undefined} motor
  */
 export function motorFactorScore(motor) {
@@ -37,16 +32,12 @@ export function motorFactorScore(motor) {
   let weightSum = 0;
 
   if (motor.rate2nd != null) {
-    weighted += motor.rate2nd * 1.15 * 0.55;
-    weightSum += 0.55;
+    weighted += motor.rate2nd * 1.15 * 0.6;
+    weightSum += 0.6;
   }
   if (motor.rate3rd != null) {
-    weighted += motor.rate3rd * 0.95 * 0.25;
-    weightSum += 0.25;
-  }
-  if (motor.winRate != null) {
-    weighted += motor.winRate * 2.2 * 0.2;
-    weightSum += 0.2;
+    weighted += motor.rate3rd * 0.95 * 0.4;
+    weightSum += 0.4;
   }
 
   if (weightSum === 0) return 50;

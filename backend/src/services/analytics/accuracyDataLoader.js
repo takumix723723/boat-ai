@@ -1,9 +1,19 @@
 import { getPrisma } from '../../db/client.js';
 import { isRealOfficialResult } from '../results/officialResultPolicy.js';
+import { racerStatsFromLegacyMotor } from '../boatrace/racerStats.js';
 
 export function parseOfficialResult(json) {
   if (!isRealOfficialResult(json)) return null;
   return json.placements;
+}
+
+/**
+ * @param {object|null|undefined} motor
+ * @param {object|null|undefined} racerStats
+ */
+export function resolveStoredRacerStats(motor, racerStats) {
+  if (racerStats && typeof racerStats === 'object') return racerStats;
+  return racerStatsFromLegacyMotor(motor);
 }
 
 /**
@@ -27,13 +37,16 @@ export async function loadRacesForAccuracy(prisma) {
         orderBy: [{ sequence: 'desc' }, { capturedAt: 'desc' }],
         take: 1,
         select: {
+          lastMinute: true,
           aiScores: {
             include: {
               raceEntry: {
                 select: {
                   lane: true,
                   racerId: true,
-                  racer: { select: { name: true } },
+                  motor: true,
+                  racerStats: true,
+                  racer: { select: { name: true, rank: true } },
                 },
               },
             },
@@ -55,27 +68,31 @@ export function buildAccuracyRaceCases(races) {
     const snap = race.snapshots[0];
     if (!placements?.length || !snap?.aiScores?.length) continue;
 
-    const entries = snap.aiScores.map((row) => ({
-      lane: row.raceEntry.lane,
-      racerId: row.raceEntry.racerId,
-      name: row.raceEntry.racer.name,
-      breakdown:
-        row.breakdown && typeof row.breakdown === 'object'
-          ? row.breakdown
-          : {
-              st: 50,
-              exhibitionTime: 50,
-              lane: 50,
-              motor: 50,
-              course: 50,
-              lastMinute: 50,
-            },
-    }));
+    const entries = snap.aiScores.map((row) => {
+      const re = row.raceEntry;
+      const motor = re.motor && typeof re.motor === 'object' ? re.motor : null;
+      const racerStats = resolveStoredRacerStats(motor, re.racerStats);
+
+      return {
+        lane: re.lane,
+        racerId: re.racerId,
+        name: re.racer.name,
+        rank: re.racer.rank ?? 'B1',
+        branch: null,
+        st: row.st != null ? Number(row.st) : null,
+        exhibitionTime:
+          row.exhibitionTime != null ? Number(row.exhibitionTime) : null,
+        tilt: row.tilt != null ? Number(row.tilt) : null,
+        motor,
+        racerStats,
+      };
+    });
 
     cases.push({
       venueCode: race.venueCode,
       venueName: race.venueName,
       placements,
+      lastMinute: snap.lastMinute ?? null,
       entries,
     });
   }

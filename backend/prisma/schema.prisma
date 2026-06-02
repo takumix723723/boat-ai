@@ -46,8 +46,9 @@ model RaceEntry {
   raceId    String     @map("race_id") @db.Uuid
   lane      Int
   racerId   String     @map("racer_id") @db.VarChar(10)
-  motor     Json?      @db.JsonB
-  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  motor       Json?      @db.JsonB
+  racerStats  Json?      @map("racer_stats") @db.JsonB
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
   race      Race       @relation(fields: [raceId], references: [id], onDelete: Cascade)
   racer     Racer      @relation(fields: [racerId], references: [id])
@@ -89,6 +90,9 @@ model AiWeightProfile {
   weightMotor      Decimal  @map("weight_motor") @db.Decimal(6, 4)
   weightCourse     Decimal  @map("weight_course") @db.Decimal(6, 4)
   weightLastMinute Decimal  @map("weight_last_minute") @db.Decimal(6, 4)
+  weightRank       Decimal? @map("weight_rank") @db.Decimal(6, 4)
+  weightRacer      Decimal? @map("weight_racer") @db.Decimal(6, 4)
+  calibrationJson  Json?    @map("calibration_json") @db.JsonB
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 

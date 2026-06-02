@@ -1,43 +1,68 @@
-/** コード既定値（DB未接続時フォールバック） */
+/** コード既定値 v2（8因子・合計1.0） */
 export const DEFAULT_WEIGHTS = {
-  st: 0.2,
-  exhibitionTime: 0.25,
-  lane: 0.15,
-  motor: 0.2,
-  course: 0.1,
-  lastMinute: 0.1,
+  exhibitionTime: 0.22,
+  st: 0.17,
+  motor: 0.15,
+  racer: 0.15,
+  rank: 0.12,
+  lane: 0.1,
+  course: 0.05,
+  lastMinute: 0.04,
 };
 
 export const WEIGHT_FACTOR_LABELS = {
-  st: 'ST',
   exhibitionTime: '展示',
+  st: 'ST',
+  motor: 'モーター',
+  racer: '選手力',
+  rank: '級',
   lane: '枠',
-  motor: '機材力',
   course: 'コース',
   lastMinute: '直前',
 };
 
-const FACTOR_KEYS = Object.keys(DEFAULT_WEIGHTS);
+export const FACTOR_KEYS = Object.keys(DEFAULT_WEIGHTS);
+
+/** 級ウェイトの探索上限（極端な級偏重を防ぐ） */
+export const MAX_RANK_WEIGHT = 0.18;
 
 /**
- * @param {Record<string, number>} weights
+ * 旧6因子など欠損を v2 既定で補い、合計1.0に正規化
+ * @param {Record<string, number|undefined|null>} partial
  */
-export function normalizeWeights(weights) {
-  const out = { ...DEFAULT_WEIGHTS };
+export function mergeAndNormalizeWeights(partial = {}) {
+  const merged = { ...DEFAULT_WEIGHTS };
   for (const key of FACTOR_KEYS) {
-    if (weights[key] != null) {
-      const n = Number(weights[key]);
-      if (Number.isFinite(n) && n >= 0) out[key] = n;
-    }
+    const n = Number(partial[key]);
+    if (Number.isFinite(n) && n >= 0) merged[key] = n;
   }
+
+  const sum = FACTOR_KEYS.reduce((s, k) => s + merged[k], 0);
+  if (sum <= 0) return { ...DEFAULT_WEIGHTS };
+
+  const out = {};
+  for (const key of FACTOR_KEYS) {
+    out[key] = Math.round((merged[key] / sum) * 1000) / 1000;
+  }
+  const allocated = FACTOR_KEYS.slice(0, -1).reduce((s, k) => s + out[k], 0);
+  out[FACTOR_KEYS[FACTOR_KEYS.length - 1]] =
+    Math.round((1 - allocated) * 1000) / 1000;
   return out;
 }
 
 /**
  * @param {Record<string, number>} weights
  */
+export function normalizeWeights(weights) {
+  return mergeAndNormalizeWeights(weights);
+}
+
+/**
+ * @param {Record<string, number>} weights
+ */
 export function validateWeights(weights) {
-  const sum = FACTOR_KEYS.reduce((s, k) => s + weights[k], 0);
+  const normalized = mergeAndNormalizeWeights(weights);
+  const sum = FACTOR_KEYS.reduce((s, k) => s + normalized[k], 0);
   if (Math.abs(sum - 1) > 0.02) {
     return {
       ok: false,
@@ -45,26 +70,30 @@ export function validateWeights(weights) {
     };
   }
   for (const key of FACTOR_KEYS) {
-    if (weights[key] < 0 || weights[key] > 1) {
+    if (normalized[key] < 0 || normalized[key] > 1) {
       return { ok: false, error: `${key} の重みが範囲外です` };
     }
   }
-  return { ok: true, sum };
+  if (normalized.rank > MAX_RANK_WEIGHT + 0.001) {
+    return {
+      ok: false,
+      error: `級の重みは ${MAX_RANK_WEIGHT} 以下にしてください（現在: ${normalized.rank}）`,
+    };
+  }
+  return { ok: true, sum, normalized };
 }
 
 /**
- * @param {object} breakdown - 各因子スコア 0-100
+ * @param {object} breakdown
  * @param {Record<string, number>} weights
  */
 export function totalFromBreakdown(breakdown, weights) {
   if (!breakdown) return null;
-  const raw =
-    (breakdown.st ?? 50) * weights.st +
-    (breakdown.exhibitionTime ?? 50) * weights.exhibitionTime +
-    (breakdown.lane ?? 50) * weights.lane +
-    (breakdown.motor ?? 50) * weights.motor +
-    (breakdown.course ?? 50) * weights.course +
-    (breakdown.lastMinute ?? 50) * weights.lastMinute;
+  const w = mergeAndNormalizeWeights(weights);
+  const raw = FACTOR_KEYS.reduce(
+    (s, k) => s + (breakdown[k] ?? 50) * w[k],
+    0
+  );
   return Math.max(0, Math.min(100, Math.round(raw)));
 }
 
@@ -72,14 +101,30 @@ export function totalFromBreakdown(breakdown, weights) {
  * @param {import('@prisma/client').AiWeightProfile} row
  */
 export function profileRowToWeights(row) {
-  return {
-    st: Number(row.weightSt),
-    exhibitionTime: Number(row.weightExhibition),
-    lane: Number(row.weightLane),
-    motor: Number(row.weightMotor),
-    course: Number(row.weightCourse),
-    lastMinute: Number(row.weightLastMinute),
+  const partial = {
+    st: row.weightSt != null ? Number(row.weightSt) : undefined,
+    exhibitionTime:
+      row.weightExhibition != null ? Number(row.weightExhibition) : undefined,
+    lane: row.weightLane != null ? Number(row.weightLane) : undefined,
+    motor: row.weightMotor != null ? Number(row.weightMotor) : undefined,
+    course: row.weightCourse != null ? Number(row.weightCourse) : undefined,
+    lastMinute:
+      row.weightLastMinute != null ? Number(row.weightLastMinute) : undefined,
+    rank: row.weightRank != null ? Number(row.weightRank) : undefined,
+    racer: row.weightRacer != null ? Number(row.weightRacer) : undefined,
   };
+  return mergeAndNormalizeWeights(partial);
+}
+
+/**
+ * @param {import('@prisma/client').AiWeightProfile} row
+ */
+export function profileRowToCalibration(row) {
+  const json = row.calibrationJson;
+  if (!json || typeof json !== 'object') {
+    return { version: 1, rankScores: null };
+  }
+  return json;
 }
 
 /**
@@ -92,6 +137,7 @@ export function profileRowToDto(row) {
     label: row.label,
     isActive: row.isActive,
     weights: profileRowToWeights(row),
+    calibration: profileRowToCalibration(row),
     updatedAt: row.updatedAt.toISOString(),
   };
 }

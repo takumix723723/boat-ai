@@ -3,10 +3,12 @@ import { fetchWeightProfiles, updateWeightProfiles } from '../api/client';
 import './AiWeightsSection.css';
 
 const FACTOR_KEYS = [
-  'st',
   'exhibitionTime',
-  'lane',
+  'st',
   'motor',
+  'racer',
+  'rank',
+  'lane',
   'course',
   'lastMinute',
 ];
@@ -16,12 +18,22 @@ function formatPct(value) {
   return `${Math.round(value)}%`;
 }
 
-function emptyForm(labels) {
+function emptyForm() {
+  const defaults = {
+    exhibitionTime: '0.22',
+    st: '0.17',
+    motor: '0.15',
+    racer: '0.15',
+    rank: '0.12',
+    lane: '0.1',
+    course: '0.05',
+    lastMinute: '0.04',
+  };
   return {
     name: '',
     label: '',
     setActive: false,
-    weights: Object.fromEntries(FACTOR_KEYS.map((k) => [k, '0.2'])),
+    weights: { ...defaults },
   };
 }
 
@@ -49,7 +61,7 @@ export default function AiWeightsSection() {
             weights: { ...active.weights },
           });
         } else {
-          setForm(emptyForm(w?.factorLabels));
+          setForm(emptyForm());
         }
       })
       .catch((err) => setError(err.message || '取得に失敗'))

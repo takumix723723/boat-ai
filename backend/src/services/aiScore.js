@@ -1,11 +1,12 @@
 import { buildScoreDelta } from './scoreDelta.js';
-import { getActiveWeightsSync } from './ai/weightProfileService.js';
+import { getActiveWeightsSync, getActiveCalibrationSync } from './ai/weightProfileService.js';
 import { DEFAULT_WEIGHTS } from './ai/weightConfig.js';
 import { motorFactorScore } from './boatrace/motorEvaluation.js';
+import { racerFactorScore, resolveRacerStats } from './boatrace/racerStats.js';
+import { scoreRank } from './ai/rankCalibration.js';
 
 /**
- * AI点数（0-100）仮ロジック
- * 将来: 機械学習モデル・選手DB・過去戦績に差し替え可能な純関数
+ * AI点数（0-100）
  */
 const LANE_COURSE_SCORE = {
   1: 72,
@@ -18,7 +19,6 @@ const LANE_COURSE_SCORE = {
 
 const clamp = (n, min = 0, max = 100) => Math.max(min, Math.min(max, n));
 
-/** ST: 0.00〜0.30 付近を高評価 */
 function scoreSt(st) {
   if (st == null) return 50;
   if (st <= 0.05) return 95;
@@ -29,7 +29,6 @@ function scoreSt(st) {
   return 45;
 }
 
-/** 展示タイム: 6.5秒台を基準（場により調整予定） */
 function scoreExhibitionTime(time) {
   if (time == null) return 50;
   if (time <= 6.52) return 95;
@@ -40,23 +39,23 @@ function scoreExhibitionTime(time) {
   return 42;
 }
 
-/** 枠順ボーナス（イン有利を簡易反映） */
 function scoreLane(lane) {
   const base = { 1: 82, 2: 90, 3: 86, 4: 76, 5: 68, 6: 60 };
   return base[lane] ?? 50;
 }
 
-/** モーター機材力（2連率・3連率・勝率のみ。号機は使わない） */
 function scoreMotor(motor) {
   return motorFactorScore(motor);
 }
 
-/** コース有利不利 */
+function scoreRacer(entry) {
+  return racerFactorScore(resolveRacerStats(entry.racerStats, entry.motor));
+}
+
 function scoreCourse(lane) {
   return LANE_COURSE_SCORE[lane] ?? 50;
 }
 
-/** 直前情報: 風・波で微調整（レース単位で同じ値を各艇に適用） */
 function scoreLastMinute(lastMinute, lane) {
   if (!lastMinute) return 50;
   let base = 50;
@@ -81,14 +80,24 @@ function scoreLastMinute(lastMinute, lane) {
  * @param {import('../types/race.js').RacerEntry} entry
  * @param {import('../types/race.js').LastMinuteInfo} lastMinute
  * @param {Record<string, number>} [weights]
+ * @param {object|null} [calibration]
  */
-export function calculateAiScore(entry, lastMinute, weights = null) {
+export function calculateAiScore(
+  entry,
+  lastMinute,
+  weights = null,
+  calibration = null
+) {
   const w = weights ?? getActiveWeightsSync() ?? DEFAULT_WEIGHTS;
+  const cal = calibration ?? getActiveCalibrationSync();
+
   const breakdown = {
     st: scoreSt(entry.st),
     exhibitionTime: scoreExhibitionTime(entry.exhibitionTime),
     lane: scoreLane(entry.lane),
     motor: scoreMotor(entry.motor),
+    racer: scoreRacer(entry),
+    rank: scoreRank(entry.rank, cal),
     course: scoreCourse(entry.lane),
     lastMinute: scoreLastMinute(lastMinute, entry.lane),
   };
@@ -98,6 +107,8 @@ export function calculateAiScore(entry, lastMinute, weights = null) {
       breakdown.exhibitionTime * w.exhibitionTime +
       breakdown.lane * w.lane +
       breakdown.motor * w.motor +
+      breakdown.racer * w.racer +
+      breakdown.rank * w.rank +
       breakdown.course * w.course +
       breakdown.lastMinute * w.lastMinute
   );
@@ -105,7 +116,7 @@ export function calculateAiScore(entry, lastMinute, weights = null) {
   return { ...breakdown, total: clamp(total) };
 }
 
-/** レース全艇のAI点数を再計算（Live: previousAiScore / scoreDelta 付与） */
+/** レース全艇のAI点数を再計算 */
 export function applyAiScoresToRace(race) {
   const lastMinuteChanged = race._lastMinuteChanged ?? false;
 
