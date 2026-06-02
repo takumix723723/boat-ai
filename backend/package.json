@@ -17,6 +17,7 @@
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
+    "test": "node --test scripts/test-prediction-hits.js scripts/test-bet-decision.js",
     "db:check": "node scripts/check-db.js",
     "db:set-url": "node scripts/apply-database-url.js"
   },

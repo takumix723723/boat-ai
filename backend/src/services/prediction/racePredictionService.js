@@ -1,4 +1,5 @@
 import { motorFactorScore } from '../boatrace/motorEvaluation.js';
+import { buildFormationParts, buildBoxParts } from './predictionBetSpec.js';
 
 /** 競艇の印（AI順位から付与） */
 const MARK_BY_RANK = ['◎', '○', '▲', '△', '×', ''];
@@ -137,46 +138,6 @@ function probToEstimatedOdds(prob) {
   if (prob <= 0) return 999.9;
   const raw = 0.75 / prob;
   return Math.round(Math.min(999.9, Math.max(3.0, raw)) * 10) / 10;
-}
-
-function buildFormationParts(ranked) {
-  const head = ranked[0].lane;
-  const secondLanes = [ranked[1].lane, ranked[2].lane];
-  const thirdSet = new Set(
-    ranked.slice(1, Math.min(5, ranked.length)).map((e) => e.lane)
-  );
-  const thirdLanes = [...thirdSet].sort((a, b) => a - b);
-  let points = 0;
-  for (const s of secondLanes) {
-    for (const t of thirdLanes) {
-      if (head !== s && head !== t && s !== t) points += 1;
-    }
-  }
-  return {
-    display: `${head}→${secondLanes.join(',')}→${thirdLanes.join(',')}`,
-    points,
-    head,
-    secondLanes,
-    thirdLanes,
-  };
-}
-
-function buildBoxParts(ranked) {
-  const lanes = [
-    ranked[1]?.lane,
-    ranked[2]?.lane,
-    ranked[Math.min(4, ranked.length - 1)]?.lane,
-  ]
-    .filter((l) => l != null)
-    .sort((a, b) => a - b);
-  const unique = [...new Set(lanes)];
-  const n = unique.length;
-  const points = n >= 3 ? 6 : n === 2 ? 2 : 1;
-  return {
-    display: unique.join('-'),
-    points,
-    lanes: unique,
-  };
 }
 
 function buildBettingGuide(ranked, combos, signals) {

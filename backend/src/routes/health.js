@@ -40,6 +40,8 @@ router.get('/', async (_req, res) => {
     },
     apiFeatures: {
       racePrediction: true,
+      raceBetAdvice: true,
+      predictionPerformance: true,
       raceResult: true,
       raceHistory: true,
     },

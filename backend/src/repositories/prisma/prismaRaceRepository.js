@@ -1,5 +1,7 @@
 import { getPrisma } from '../../db/client.js';
 import { isRealOfficialResult } from '../../services/results/officialResultPolicy.js';
+import { settleBetAdviceForRace } from '../../services/prediction/raceBetAdviceService.js';
+import { isPersistenceEnabled } from '../../config/persistence.js';
 
 /**
  * @param {string} externalId e.g. 20260601-03-11
@@ -27,6 +29,7 @@ export class PrismaRaceRepository {
   /** @param {import('@prisma/client').Prisma.TransactionClient} [tx] */
   constructor(tx) {
     this.db = tx ?? getPrisma();
+    this.inTransaction = Boolean(tx);
   }
 
   /**
@@ -41,7 +44,7 @@ export class PrismaRaceRepository {
       ? race.officialResult
       : undefined;
 
-    return this.db.race.upsert({
+    const row = await this.db.race.upsert({
       where: { externalId: race.id },
       create: {
         externalId: race.id,
@@ -60,5 +63,16 @@ export class PrismaRaceRepository {
         ...(officialResult ? { officialResult } : {}),
       },
     });
+
+    if (isPersistenceEnabled() && officialResult && !this.inTransaction) {
+      settleBetAdviceForRace(row.id, officialResult).catch((err) => {
+        console.warn('[race] bet advice settle skipped', {
+          raceId: race.id,
+          message: err.message,
+        });
+      });
+    }
+
+    return row;
   }
 }

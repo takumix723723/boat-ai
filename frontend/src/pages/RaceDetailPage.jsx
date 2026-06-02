@@ -17,6 +17,7 @@ import FavoriteButton from '../components/FavoriteButton';
 import AiHistorySection from '../components/AiHistorySection';
 import RaceResultSection from '../components/RaceResultSection';
 import PredictionSection from '../components/PredictionSection';
+import RaceVerdictBanner from '../components/RaceVerdictBanner';
 import RaceInfoHeader from '../components/RaceInfoHeader';
 import RacerIntelligenceModal from '../components/RacerIntelligenceModal';
 import './RaceDetailPage.css';
@@ -138,11 +139,14 @@ export default function RaceDetailPage() {
 
       <EntryTable entries={race.entries} />
 
+      <RaceVerdictBanner betAdvice={data?.betAdvice} />
+
       <PredictionSection
         raceId={race.id}
         race={race}
         meta={meta ?? race.meta}
         refreshKey={lastUpdated}
+        betAdvice={data?.betAdvice}
       />
 
       <RaceResultSection

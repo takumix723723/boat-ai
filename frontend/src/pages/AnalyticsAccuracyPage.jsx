@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchAccuracyAnalytics } from '../api/client';
+import PerformanceDashboard from '../components/PerformanceDashboard';
 import AiWeightsSection from '../components/AiWeightsSection';
 import AiWeightOptimizeSection from '../components/AiWeightOptimizeSection';
 import AiLearningSection from '../components/AiLearningSection';
@@ -15,47 +16,30 @@ function formatNum(value, digits = 2) {
   return Number(value).toFixed(digits);
 }
 
-export default function AnalyticsAccuracyPage() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-  const [weightsRefresh, setWeightsRefresh] = useState(0);
-
-  const load = () => {
-    setLoading(true);
-    setError(null);
-    fetchAccuracyAnalytics()
-      .then((res) => setData(res.accuracy ?? null))
-      .catch((err) => setError(err.message || '取得に失敗しました'))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    load();
-  }, []);
-
+function LearningTab({ data, loading, error, onReload, weightsRefresh, onWeightsApplied }) {
   if (loading) {
-    return <div className="page loading">AI精度を集計中…</div>;
+    return <div className="loading">順位精度を集計中…</div>;
   }
 
   if (error) {
     return (
-      <div className="page analytics-page">
-        <h1 className="page-title">AI精度</h1>
+      <>
         <div className="error-box">{error}</div>
-        <button type="button" className="analytics-retry" onClick={load}>
+        <button type="button" className="analytics-retry" onClick={onReload}>
           再読み込み
         </button>
-      </div>
+      </>
     );
   }
 
   if (!data?.available) {
     return (
-      <div className="page analytics-page">
-        <h1 className="page-title">AI精度</h1>
+      <>
         <p className="analytics-empty">
-          {data?.message ?? '精度分析を利用できません'}
+          {data?.message ?? '順位精度分析を利用できません'}
+        </p>
+        <p className="analytics-tab-note">
+          こちらは「AI順位」と実着順の一致度です。買い目成績とは別指標です。
         </p>
         {data?.reason === 'database_unavailable' && (
           <p className="analytics-hint">
@@ -64,26 +48,23 @@ export default function AnalyticsAccuracyPage() {
           </p>
         )}
         <AiLearningSection />
-        <button type="button" className="analytics-retry" onClick={load}>
+        <button type="button" className="analytics-retry" onClick={onReload}>
           再読み込み
         </button>
-      </div>
+      </>
     );
   }
 
   const hasData = (data.analyzedRaces ?? 0) > 0;
 
   return (
-    <div className="page analytics-page">
-      <h1 className="page-title">AI精度</h1>
-      <p className="page-sub">
-        DB保存済みの結果とスナップショットから集計 · 重みプロファイルで精度比較
+    <>
+      <p className="analytics-tab-note">
+        順位予測精度（AI1位勝率・Top3等）。買い目の的中率は「成績」タブを参照してください。
       </p>
 
-      <AiLearningSection onApplied={() => setWeightsRefresh((k) => k + 1)} />
-
-      <AiWeightOptimizeSection onSaved={() => setWeightsRefresh((k) => k + 1)} />
-
+      <AiLearningSection onApplied={onWeightsApplied} />
+      <AiWeightOptimizeSection onSaved={onWeightsApplied} />
       <AiWeightsSection key={weightsRefresh} />
 
       {!hasData ? (
@@ -133,24 +114,9 @@ export default function AnalyticsAccuracyPage() {
             </div>
           </div>
 
-          <div className="analytics-summary card">
-            <table className="analytics-table">
-              <tbody>
-                <tr>
-                  <th>分析レース数</th>
-                  <td>{data.analyzedRaces}</td>
-                </tr>
-                <tr>
-                  <th>分析艇数</th>
-                  <td>{data.analyzedEntries}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
           {data.venueBreakdown?.length > 0 && (
             <section className="analytics-venues card">
-              <h2 className="analytics-section-title">場別</h2>
+              <h2 className="analytics-section-title">場別（順位精度）</h2>
               <div className="analytics-table-wrap">
                 <table className="analytics-table analytics-table--venues">
                   <thead>
@@ -159,8 +125,6 @@ export default function AnalyticsAccuracyPage() {
                       <th>レース</th>
                       <th>1位勝率</th>
                       <th>Top3命中</th>
-                      <th>Top3着内</th>
-                      <th>順位差</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -170,8 +134,6 @@ export default function AnalyticsAccuracyPage() {
                         <td>{v.analyzedRaces}</td>
                         <td>{formatPct(v.aiTop1WinRate)}</td>
                         <td>{formatPct(v.aiTop3HitRate)}</td>
-                        <td>{formatNum(v.top3HitAverage, 2)}</td>
-                        <td>{formatNum(v.rankDiffAverage, 2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -179,32 +141,73 @@ export default function AnalyticsAccuracyPage() {
               </div>
             </section>
           )}
-
-          {data.formulas && (
-            <details className="analytics-formulas">
-              <summary>計算式</summary>
-              <ul>
-                <li>
-                  <strong>AI1位勝率:</strong> {data.formulas.aiTop1WinRate}
-                </li>
-                <li>
-                  <strong>Top3命中率:</strong> {data.formulas.aiTop3HitRate}
-                </li>
-                <li>
-                  <strong>Top3着内平均:</strong> {data.formulas.top3HitAverage}
-                </li>
-                <li>
-                  <strong>順位差平均:</strong> {data.formulas.rankDiffAverage}
-                </li>
-              </ul>
-            </details>
-          )}
         </>
       )}
 
-      <button type="button" className="analytics-retry" onClick={load}>
+      <button type="button" className="analytics-retry" onClick={onReload}>
         再集計
       </button>
+    </>
+  );
+}
+
+export default function AnalyticsAccuracyPage() {
+  const [tab, setTab] = useState('performance');
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [weightsRefresh, setWeightsRefresh] = useState(0);
+
+  const loadLearning = () => {
+    setLoading(true);
+    setError(null);
+    fetchAccuracyAnalytics()
+      .then((res) => setData(res.accuracy ?? null))
+      .catch((err) => setError(err.message || '取得に失敗しました'))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    if (tab === 'learning') loadLearning();
+  }, [tab]);
+
+  return (
+    <div className="page analytics-page">
+      <h1 className="page-title">分析</h1>
+
+      <div className="analytics-tabs" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'performance'}
+          className={`analytics-tab-btn ${tab === 'performance' ? 'active' : ''}`}
+          onClick={() => setTab('performance')}
+        >
+          成績
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'learning'}
+          className={`analytics-tab-btn ${tab === 'learning' ? 'active' : ''}`}
+          onClick={() => setTab('learning')}
+        >
+          学習
+        </button>
+      </div>
+
+      {tab === 'performance' ? (
+        <PerformanceDashboard />
+      ) : (
+        <LearningTab
+          data={data}
+          loading={loading}
+          error={error}
+          onReload={loadLearning}
+          weightsRefresh={weightsRefresh}
+          onWeightsApplied={() => setWeightsRefresh((k) => k + 1)}
+        />
+      )}
     </div>
   );
 }

@@ -1,0 +1,143 @@
+.performance-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.perf-period {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: var(--surface-2, #f0f2f5);
+  border-radius: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.perf-period-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 8px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.perf-period-btn.active {
+  background: var(--card-bg, #fff);
+  color: var(--text, #111);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.perf-hero {
+  padding: 16px;
+  text-align: center;
+}
+
+.perf-hero-question {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.perf-hero-line {
+  margin: 6px 0 4px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.perf-hero-sub {
+  margin: 0;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.perf-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.perf-card {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border, #e8e8e8);
+}
+
+.perf-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.perf-card-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.perf-card-rate {
+  font-size: 1.2rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent, #1565c0);
+}
+
+.perf-card-count {
+  margin: 4px 0 8px;
+  font-size: 0.8rem;
+}
+
+.perf-card-sub {
+  margin: 6px 0 0;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.perf-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-2, #eee);
+  overflow: hidden;
+}
+
+.perf-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1565c0, #42a5f5);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.perf-pending,
+.perf-disclaimer {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.perf-conf-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.perf-conf-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border, #eee);
+  font-size: 0.8rem;
+}
+
+.perf-loading,
+.perf-empty,
+.perf-error {
+  padding: 16px 0;
+  font-size: 0.85rem;
+}

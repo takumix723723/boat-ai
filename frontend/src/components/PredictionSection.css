@@ -4,6 +4,12 @@
   color: #fff;
 }
 
+.prediction--reference {
+  opacity: 0.88;
+  filter: saturate(0.75);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
 .prediction-title {
   margin: 0 0 8px;
   font-size: 0.9rem;

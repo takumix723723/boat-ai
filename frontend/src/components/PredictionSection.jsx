@@ -123,9 +123,11 @@ export default function PredictionSection({
   race = null,
   meta = null,
   refreshKey = null,
+  betAdvice: betAdviceProp = null,
 }) {
   const [loading, setLoading] = useState(true);
   const [prediction, setPrediction] = useState(null);
+  const [betAdvice, setBetAdvice] = useState(betAdviceProp);
   const [error, setError] = useState(null);
   const [errorDetail, setErrorDetail] = useState(null);
 
@@ -143,7 +145,10 @@ export default function PredictionSection({
 
     fetchRacePrediction(raceId)
       .then((res) => {
-        if (!cancelled) setPrediction(res.prediction ?? null);
+        if (!cancelled) {
+          setPrediction(res.prediction ?? null);
+          setBetAdvice(res.betAdvice ?? betAdviceProp ?? null);
+        }
       })
       .catch((err) => {
         if (!cancelled) {
@@ -205,10 +210,21 @@ export default function PredictionSection({
   const { marks, recommendations, oddsNote, bettingGuide, aiComment } =
     prediction;
   const honmeiRec = recommendations?.find((r) => r.id === 'honmei');
+  const advice = betAdvice?.available ? betAdvice : null;
+  const isReference =
+    advice?.verdict === 'skip' || advice?.verdict === 'watch';
+  const sectionTitle =
+    advice?.verdict === 'skip'
+      ? '参考買い目（見送り・検証用）'
+      : advice?.verdict === 'watch'
+        ? '参考買い目（様子見）'
+        : 'AI買い目提案';
 
   return (
-    <section className="prediction card prediction--dark">
-      <RaceInfoHeader race={race} meta={meta} sectionTitle="AI買い目提案" />
+    <section
+      className={`prediction card prediction--dark ${isReference ? 'prediction--reference' : ''}`}
+    >
+      <RaceInfoHeader race={race} meta={meta} sectionTitle={sectionTitle} />
 
       <HonmeiCard honmei={honmeiRec} guide={bettingGuide} />
       <BettingPicks guide={bettingGuide} recommendations={recommendations} />

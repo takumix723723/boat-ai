@@ -1,3 +1,33 @@
+.analytics-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.analytics-tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 10px;
+  background: var(--card-bg, #fff);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.analytics-tab-btn.active {
+  border-color: var(--accent, #1565c0);
+  color: var(--accent, #1565c0);
+  background: rgba(21, 101, 192, 0.06);
+}
+
+.analytics-tab-note {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+
 .analytics-page .page-sub {
   margin: 0 0 16px;
   font-size: 0.78rem;

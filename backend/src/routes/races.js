@@ -11,6 +11,7 @@ import {
 import { getRaceHistory } from '../services/persistence/raceHistoryService.js';
 import { getRaceResult } from '../services/results/raceResultService.js';
 import { buildRacePrediction } from '../services/prediction/racePredictionService.js';
+import { buildBetAdviceFromMemory } from '../services/prediction/raceBetAdviceService.js';
 
 const router = Router();
 
@@ -66,9 +67,11 @@ router.get('/:id/prediction', loadMiddleware, (req, res, next) => {
     if (!race) {
       return res.status(404).json({ error: 'Race not found' });
     }
+    const prediction = buildRacePrediction(race);
     res.json({
       meta: getDatasetMeta(),
-      prediction: buildRacePrediction(race),
+      prediction,
+      betAdvice: buildBetAdviceFromMemory(race),
     });
   } catch (err) {
     next(err);
@@ -91,7 +94,15 @@ router.get('/:id', loadMiddleware, (req, res) => {
   if (!race) {
     return res.status(404).json({ error: 'Race not found' });
   }
-  res.json({ meta: getDatasetMeta(), race });
+  const prediction = buildRacePrediction(race);
+  res.json({
+    meta: getDatasetMeta(),
+    race,
+    betAdvice: buildBetAdviceFromMemory(race),
+    prediction: prediction.available
+      ? { confidence: prediction.confidence }
+      : null,
+  });
 });
 
 /** PATCH /api/races/:id/last-minute */

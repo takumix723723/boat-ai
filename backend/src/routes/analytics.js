@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getAccuracyAnalytics } from '../services/analytics/accuracyAnalyticsService.js';
+import { getPredictionPerformance } from '../services/analytics/predictionPerformanceService.js';
 import {
   listWeightProfiles,
   upsertWeightProfile,
@@ -8,6 +9,16 @@ import { simulateProfilesAccuracy } from '../services/analytics/accuracySimulati
 import { optimizeWeights } from '../services/analytics/weightOptimizationService.js';
 
 const router = Router();
+
+/** GET /api/analytics/prediction-performance?period=today|7d|all&scope=all|bet_only */
+router.get('/prediction-performance', async (req, res, next) => {
+  try {
+    const performance = await getPredictionPerformance(req.query ?? {});
+    res.json({ performance });
+  } catch (err) {
+    next(err);
+  }
+});
 
 /** GET /api/analytics/accuracy */
 router.get('/accuracy', async (_req, res, next) => {

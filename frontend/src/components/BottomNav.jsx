@@ -5,7 +5,7 @@ const tabs = [
   { to: '/', label: 'レース', icon: '🏁' },
   { to: '/watch', label: '通知', icon: '🔔' },
   { to: '/ranking', label: 'AIランク', icon: '📊' },
-  { to: '/analytics', label: '精度', icon: '🎯' },
+  { to: '/analytics', label: '成績', icon: '🎯' },
 ];
 
 export default function BottomNav() {

@@ -1,0 +1,69 @@
+.race-verdict {
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--border, #ccc);
+}
+
+.race-verdict--bet {
+  border-left-color: #2e7d32;
+  background: linear-gradient(135deg, rgba(46, 125, 50, 0.12), transparent);
+}
+
+.race-verdict--watch {
+  border-left-color: #f9a825;
+  background: linear-gradient(135deg, rgba(249, 168, 37, 0.1), transparent);
+}
+
+.race-verdict--skip {
+  border-left-color: #78909c;
+  background: linear-gradient(135deg, rgba(120, 144, 156, 0.12), transparent);
+}
+
+.race-verdict-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.race-verdict-label {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.race-verdict--bet .race-verdict-label {
+  font-size: 1.4rem;
+}
+
+.race-verdict--skip .race-verdict-label {
+  font-size: 1.35rem;
+}
+
+.race-verdict-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.race-verdict-stake,
+.race-verdict-ev,
+.race-verdict-disclaimer {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+}
+
+.race-verdict-disclaimer {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  opacity: 0.9;
+}
+
+.race-verdict-reasons {
+  margin: 8px 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.race-verdict-reasons li {
+  margin-bottom: 2px;
+}

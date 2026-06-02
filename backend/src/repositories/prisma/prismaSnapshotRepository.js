@@ -1,5 +1,9 @@
 import { getPrisma } from '../../db/client.js';
 import { isRealOfficialResult } from '../../services/results/officialResultPolicy.js';
+import {
+  upsertBetAdviceInTransaction,
+  afterRacePersisted,
+} from '../../services/prediction/raceBetAdviceService.js';
 import { PrismaRacerRepository } from './prismaRacerRepository.js';
 import { PrismaRaceRepository } from './prismaRaceRepository.js';
 
@@ -37,6 +41,9 @@ export class PrismaSnapshotRepository {
       );
       snapshotsCreated += result.snapshotsCreated;
       aiScoresCreated += result.aiScoresCreated;
+      if (result.raceUuid) {
+        await afterRacePersisted(race, result.raceUuid);
+      }
     }
 
     return {
@@ -145,7 +152,16 @@ export class PrismaSnapshotRepository {
       aiScoresCreated += 1;
     }
 
-    return { snapshotsCreated: 1, aiScoresCreated };
+    try {
+      await upsertBetAdviceInTransaction(tx, race, raceRow.id, snapshot.id);
+    } catch (err) {
+      console.warn('[snapshot] bet advice upsert skipped', {
+        raceId: race.id,
+        message: err.message,
+      });
+    }
+
+    return { snapshotsCreated: 1, aiScoresCreated, raceUuid: raceRow.id };
   }
 
   async getStats() {

@@ -35,6 +35,7 @@ model Race {
   updatedAt  DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
   entries    RaceEntry[]
   snapshots  RaceSnapshot[]
+  betAdvice  RaceBetAdvice?
 
   @@unique([raceDate, venueCode, raceNo])
   @@index([raceDate])
@@ -141,4 +142,55 @@ model AiScore {
   @@unique([snapshotId, raceEntryId])
   @@index([raceEntryId])
   @@map("ai_scores")
+}
+
+/// MVP: レースあたり最終1件の買い目凍結 + verdict + 結果検証
+model RaceBetAdvice {
+  id                       String    @id @default(uuid()) @db.Uuid
+  raceId                   String    @unique @map("race_id") @db.Uuid
+  snapshotId               String    @map("snapshot_id") @db.Uuid
+  raceDate                 DateTime  @map("race_date") @db.Date
+  venueCode                String    @map("venue_code") @db.VarChar(2)
+  venueName                String    @map("venue_name") @db.VarChar(50)
+  raceNo                   Int       @map("race_no")
+  adviceGeneratedAt        DateTime  @map("advice_generated_at") @db.Timestamptz(6)
+  predictionGeneratedAt    DateTime  @map("prediction_generated_at") @db.Timestamptz(6)
+  oddsSource               String    @default("estimated") @map("odds_source") @db.VarChar(20)
+  verdict                  String    @db.VarChar(10)
+  betScore                 Decimal   @map("bet_score") @db.Decimal(6, 2)
+  skipScore                Decimal   @map("skip_score") @db.Decimal(6, 2)
+  factorAlignmentScore     Decimal?  @map("factor_alignment_score") @db.Decimal(6, 2)
+  evHonmei                 Decimal?  @map("ev_honmei") @db.Decimal(8, 4)
+  hasEdge                  Boolean   @default(false) @map("has_edge")
+  verdictReasons           Json      @default("[]") @map("verdict_reasons") @db.JsonB
+  stakePlanJson            Json      @map("stake_plan_json") @db.JsonB
+  honmeiLane               Int       @map("honmei_lane")
+  honmeiMark               String    @default("◎") @map("honmei_mark") @db.VarChar(4)
+  honmeiConfidencePercent  Int       @map("honmei_confidence_percent")
+  honmeiConfidenceTier     String    @map("honmei_confidence_tier") @db.VarChar(10)
+  honmeiTrifectaCombo      String    @map("honmei_trifecta_combo") @db.VarChar(20)
+  honmeiEstimatedOdds      Decimal?  @map("honmei_estimated_odds") @db.Decimal(8, 2)
+  formationJson            Json      @map("formation_json") @db.JsonB
+  boxJson                  Json      @map("box_json") @db.JsonB
+  anaCombo                 String?   @map("ana_combo") @db.VarChar(20)
+  anaEstimatedOdds         Decimal?  @map("ana_estimated_odds") @db.Decimal(8, 2)
+  predictionPayload        Json?     @map("prediction_payload") @db.JsonB
+  resultStatus             String    @default("pending") @map("result_status") @db.VarChar(20)
+  resultSettledAt          DateTime? @map("result_settled_at") @db.Timestamptz(6)
+  resultCombo              String?   @map("result_combo") @db.VarChar(20)
+  winnerLane               Int?      @map("winner_lane")
+  hitHonmeiWin             Boolean?  @map("hit_honmei_win")
+  hitHonmeiTrifecta        Boolean?  @map("hit_honmei_trifecta")
+  hitFormation             Boolean?  @map("hit_formation")
+  hitBox                   Boolean?  @map("hit_box")
+  hitAna                   Boolean?  @map("hit_ana")
+  roiStatus                String    @default("unsupported") @map("roi_status") @db.VarChar(20)
+  createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  race                     Race      @relation(fields: [raceId], references: [id], onDelete: Cascade)
+
+  @@index([raceDate])
+  @@index([verdict])
+  @@index([resultStatus])
+  @@map("race_bet_advice")
 }

@@ -87,6 +87,12 @@ export function fetchAccuracyAnalytics() {
   return request('/api/analytics/accuracy');
 }
 
+/** @param {'today'|'7d'|'all'} period */
+export function fetchPredictionPerformance(period = 'today', scope = 'all') {
+  const params = new URLSearchParams({ period, scope });
+  return request(`/api/analytics/prediction-performance?${params}`);
+}
+
 export function fetchRacerIntelligence(racerId) {
   return request(`/api/racers/${encodeURIComponent(racerId)}/intelligence`);
 }
